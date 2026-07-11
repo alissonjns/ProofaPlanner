@@ -285,18 +285,57 @@ class Exportador:
     # ──────────────────────────────────────────────────────────────────────────
 
     def gerar_sd_word(self, dados: dict) -> bytes:
-        """Gera Sequência Didática em Word, no formato real usado pela professora."""
+        """Gera o documento de Sequência Didática usando o template Word (docxtpl)."""
+        from docxtpl import DocxTemplate
+        import io
+        from pathlib import Path
+
+        # Caminho do template do usuário (na raiz do projeto)
+        template_path = Path(__file__).parent.parent / "SD- CG 1° Bimestre.docx"
+
+        # Tenta usar o docxtpl se o arquivo existir
+        if template_path.exists():
+            try:
+                doc = DocxTemplate(template_path)
+                
+                # Prepara o contexto de dados para injetar nas chaves {{ }}
+                context = {
+                    "titulo": dados.get("titulo", "Sequência Didática"),
+                    "tema": dados.get("tema", ""),
+                    "duracao": dados.get("duracao", ""),
+                    "campo": dados.get("campo", ""),
+                    "segmento": dados.get("segmento", ""),
+                    "faixa": dados.get("faixa", ""),
+                    "justificativa": dados.get("justificativa", ""),
+                    "obj_geral": dados.get("obj_geral", ""),
+                    "objetivos_bncc": dados.get("objetivos_bncc", []),
+                    "atividades": dados.get("atividades", []),
+                    "avaliacao": dados.get("avaliacao", "")
+                }
+                
+                doc.render(context)
+                buffer = io.BytesIO()
+                doc.save(buffer)
+                buffer.seek(0)
+                return buffer.getvalue()
+            except Exception as e:
+                print(f"Erro ao gerar com template: {e}")
+                # Fallback para o método gerado do zero caso o template esteja corrompido ou dê erro
+
+        return self._gerar_sd_word_legacy(dados)
+
+    def _gerar_sd_word_legacy(self, dados: dict) -> bytes:
+        """Método antigo (fallback) para gerar o documento Word do zero."""
         doc = self._configurar_documento()
 
-        # Título principal
-        p_title = doc.add_paragraph()
-        p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        r = p_title.add_run("Sequência Didática")
-        r.bold = True
-        r.font.size = Pt(20)
-        r.font.color.rgb = self.COR_PRIMARIA
+        # Título
+        p_tit = doc.add_paragraph()
+        p_tit.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        r1 = p_tit.add_run("Sequência Didática\n")
+        r1.bold = True
+        r1.font.size = Pt(20)
+        r1.font.color.rgb = self.COR_PRIMARIA
 
-        # Subtítulo (nome da SD)
         p_sub = doc.add_paragraph()
         p_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
         r2 = p_sub.add_run(dados.get("titulo", ""))

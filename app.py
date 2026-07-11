@@ -197,49 +197,43 @@ def detectar_arquivos_locais() -> list[Path]:
     )
 
 
-# ─── Sidebar ──────────────────────────────────────────────────────────────────
+# ─── Top Navigation ─────────────────────────────────────────────────────────────
 _NA_TOUR = st.session_state.pagina == "boas_vindas"
 
 if not _NA_TOUR:
-    with st.sidebar:
-        st.markdown("""
-        <div style='text-align:center; padding:1.5rem 0 1rem;'>
-            <div style='font-size:2.5rem;'>📚</div>
-            <div style='font-size:1.4rem; font-weight:700; color:#10B981; margin-top:0.3rem;'>ProfaPlanner</div>
-            <div style='font-size:0.68rem; color:#475569; letter-spacing:1px;'>BNCC · EDUCAÇÃO INFANTIL</div>
-        </div>""", unsafe_allow_html=True)
-        st.divider()
+    st.markdown("""
+    <div style='display:flex; align-items:center; gap:12px; margin-bottom: 2rem;'>
+        <div style='font-size:2.8rem;'>📚</div>
+        <div>
+            <div style='font-size:1.8rem; font-weight:700; color:#10B981; line-height:1.1;'>ProfaPlanner</div>
+            <div style='font-size:0.75rem; color:#475569; letter-spacing:1px; font-weight:600;'>BNCC · EDUCAÇÃO INFANTIL</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        _nav = [
-            ("inicio",    "🏠", "Início"),
-            ("modelo",    "📋", "Meu Modelo de Plano"),
-            ("plano",     "✏️", "Criar Plano de Aula"),
-            ("alunos",    "👶", "Relatório dos Alunos"),
-            ("profabot",  "💬", "Tirar Dúvidas"),
-        ]
-        for _k, _ic, _lb in _nav:
-            _ativo = st.session_state.pagina == _k
-            if st.button(f"{_ic}  {_lb}", key=f"nav_{_k}",
-                         use_container_width=True,
-                         type="primary" if _ativo else "secondary"):
-                st.session_state.pagina = _k
-                st.rerun()
+    _nav_options = {
+        "🏠 Início": "inicio",
+        "📋 Meu Modelo": "modelo",
+        "✏️ Criar Plano": "plano",
+        "👶 Alunos": "alunos",
+        "💬 ProfaBot": "profabot"
+    }
 
-        st.divider()
-        _m = st.session_state.modelo_escola
-        if _m:
-            st.success(f"✅ {_m.get('nome','Modelo ativo')[:28]}")
-        else:
-            st.info("💡 Carregue o modelo da escola")
+    # Pegar a chave atual pelo valor
+    current_key = next((k for k, v in _nav_options.items() if v == st.session_state.pagina), "🏠 Início")
 
-        _n = len(st.session_state.alunos)
-        if _n:
-            st.markdown(f'<div style="text-align:center;color:#64748B;font-size:0.8rem;margin-top:.5rem;">'
-                        f"👶 {_n} aluno{'s' if _n>1 else ''} cadastrado{'s' if _n>1 else ''}</div>",
-                        unsafe_allow_html=True)
+    selected = st.pills(
+        "Navegação",
+        options=list(_nav_options.keys()),
+        default=current_key,
+        label_visibility="collapsed"
+    )
 
-        st.markdown('<div style="text-align:center;color:#334155;font-size:0.65rem;margin-top:2rem;">v1.0.0 · Feito com ❤️</div>',
-                    unsafe_allow_html=True)
+    if selected and _nav_options[selected] != st.session_state.pagina:
+        st.session_state.pagina = _nav_options[selected]
+        st.rerun()
+
+    st.divider()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -81,8 +81,17 @@ class ProfaBot:
             from dotenv import load_dotenv
             load_dotenv()
             api_key = os.getenv("GEMINI_API_KEY")
+            
+            # Se não achou no .env, tenta buscar no st.secrets (para rodar na nuvem)
             if not api_key:
-                raise ValueError("Chave da API não encontrada. Configure o arquivo .env")
+                try:
+                    import streamlit as st
+                    api_key = st.secrets.get("GEMINI_API_KEY", "")
+                except Exception:
+                    pass
+
+            if not api_key:
+                raise ValueError("Chave da API não encontrada. Configure o arquivo .env ou o st.secrets")
                 
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel(
