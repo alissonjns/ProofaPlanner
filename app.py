@@ -24,144 +24,11 @@ st.set_page_config(
 # ─── CSS ─────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-* { font-family: 'Outfit', sans-serif !important; }
-
-/* Fundo geral mais sofisticado */
-.stApp {
-    background: radial-gradient(circle at top left, #1E293B, #0F172A 40%, #0B1120 100%) !important;
-}
-
-/* Esconde sidebar durante o tour */
-.sidebar-oculta [data-testid="stSidebar"] { display: none !important; }
-
-/* Sidebar Glassmorphism */
-[data-testid="stSidebar"] {
-    background: rgba(15, 23, 42, 0.7) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Botões da Sidebar com efeito elegante */
-[data-testid="stSidebar"] .stButton > button {
-    text-align: left !important;
-    border-radius: 12px !important;
-    border: 1px solid transparent !important;
-    font-weight: 500 !important;
-    background: transparent !important;
-    color: #CBD5E1 !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    padding: 0.5rem 1rem !important;
-}
-[data-testid="stSidebar"] .stButton > button:hover {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    color: #F8FAFC !important;
-    transform: translateX(4px);
-}
-[data-testid="stSidebar"] .stButton > button[kind="primary"] {
-    background: linear-gradient(90deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%) !important;
-    border-left: 3px solid #10B981 !important;
-    color: #10B981 !important;
-}
-
-/* Inputs Premium */
-.stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div>div {
-    background: rgba(30, 41, 59, 0.6) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: #F8FAFC !important;
-    border-radius: 10px !important;
-    backdrop-filter: blur(8px);
-    transition: all 0.2s;
-}
-.stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
-    border-color: #10B981 !important;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
-}
-
-/* Cards Glassmorphism */
-.card {
-    background: rgba(30, 41, 59, 0.5);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
-}
-.card:hover { 
-    border-color: rgba(16, 185, 129, 0.4); 
-    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.1); 
-    transform: translateY(-2px);
-}
-.card-verde { background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(30, 41, 59, 0.5)); border-color: rgba(16, 185, 129, 0.3); }
-.card-azul  { background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(30, 41, 59, 0.5)); border-color: rgba(37, 99, 235, 0.3); }
-
-/* Badges */
-.badge-bncc {
-    display: inline-block;
-    background: #064E3B; color: #6EE7B7;
-    border: 1px solid #059669; border-radius: 6px;
-    padding: 1px 7px; font-size: 0.72rem; font-weight: 700;
-    font-family: 'Courier New', monospace !important; letter-spacing: 0.5px;
-}
-.tag-ei01 { background:#1E3A5F; color:#93C5FD; border:1px solid #2563EB44; border-radius:20px; padding:2px 10px; font-size:0.78rem; font-weight:600; }
-.tag-ei02 { background:#3B1F5E; color:#C4B5FD; border:1px solid #7C3AED44; border-radius:20px; padding:2px 10px; font-size:0.78rem; font-weight:600; }
-
-/* Botões Principais */
-.stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #10B981, #059669) !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-weight: 600 !important;
-    font-size: 1.05rem !important;
-    padding: 0.6rem 2rem !important;
-    color: white !important;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
-    transition: all 0.3s ease !important;
-}
-.stButton > button[kind="primary"]:hover { 
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
-}
-
-/* Hero Title com Gradiente Premium */
-.hero-title {
-    font-size: 2.8rem; font-weight: 700; letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #34D399 0%, #059669 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
-.hero-sub { color: #94A3B8; font-size: 1.15rem; margin-top: 0.5rem; font-weight: 300; }
-
-/* Seção */
-.sec { font-size: 1.15rem; font-weight: 700; color: #F8FAFC; border-left: 4px solid #10B981; padding-left: 0.75rem; margin: 1.5rem 0 1rem; border-radius: 2px; }
-
-/* Tour */
-.tour-card {
-    background: rgba(15, 23, 42, 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px; padding: 2rem 1.5rem;
-    text-align: center; display: flex;
-    flex-direction: column; align-items: center; gap: 1rem;
-    height: 220px; justify-content: center;
-    transition: all 0.3s;
-}
-.tour-card:hover { border-color: rgba(16, 185, 129, 0.5); transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-
-/* Progress bar tour */
-.prog-bar-bg { background: rgba(30, 41, 59, 0.8); border-radius:99px; height:8px; width:100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
-.prog-bar    { background:linear-gradient(90deg,#10B981,#34D399); border-radius:99px; height:8px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
-
-/* Chat */
-[data-testid="stChatMessage"] { background: rgba(30, 41, 59, 0.4)!important; border:1px solid rgba(255,255,255,0.05)!important; border-radius:12px!important; margin-bottom:0.75rem!important; backdrop-filter: blur(8px); }
-[data-testid="stTab"] { color:#94A3B8!important; font-weight: 500!important; }
-[data-testid="stTab"][aria-selected="true"] { color:#10B981!important; }
-[data-testid="stExpander"] { background: rgba(30, 41, 59, 0.6)!important; border:1px solid rgba(255,255,255,0.1)!important; border-radius:12px!important; }
-#MainMenu, footer { visibility: hidden; }
-hr { border-color: rgba(255,255,255,0.05)!important; margin:1.5rem 0!important; }
+/* Remove margin around main container to look cleaner */
+.block-container { padding-top: 2rem; padding-bottom: 2rem; max-width: 900px; }
+/* Correção para o Bug do Google Tradutor (_arrowRight_) */
 </style>
+<meta name="google" content="notranslate">
 """, unsafe_allow_html=True)
 
 # ─── Session State ────────────────────────────────────────────────────────────
@@ -547,59 +414,45 @@ def pagina_modelo():
 # ──────────────────────────────────────────────────────────────────────────────
 
 def pagina_plano_aula():
-    st.markdown('<div class="sec">✏️ Criar Sequência Didática</div>', unsafe_allow_html=True)
-    st.markdown('<p style="color:#94A3B8;">Preencha os dados para gerar sua Sequência Didática completa (com Justificativa, Atividades e Avaliação).</p>', unsafe_allow_html=True)
+    st.markdown('<div class="sec">✨ Criar Sequência Didática com IA</div>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#64748B;">Preencha o básico e deixe a nossa Inteligência Artificial escrever a aula completa para você revisar!</p>', unsafe_allow_html=True)
 
     col_form, col_result = st.columns([1.2, 1], gap="large")
 
     with col_form:
-        st.markdown("**Informações Gerais:**")
-        
-        titulo_sd = st.text_input("📌 Título da Sequência Didática", placeholder="Ex: Descobrindo meu corpo")
+        st.markdown("**1. Sobre a Aula:**")
+        titulo_sd = st.text_input("📌 Título da Sequência", placeholder="Ex: Descobrindo meu corpo")
 
         c_seg, c_faixa = st.columns(2)
         with c_seg:
-            segmentos = ["Berçário 1", "Berçário 2", "Maternal 1", "Maternal 2", "Pré 1", "Pré 2"]
-            segmento = st.selectbox("Segmento", segmentos)
+            segmento = st.selectbox("Segmento", ["Berçário 1", "Berçário 2", "Maternal 1", "Maternal 2", "Pré 1", "Pré 2"])
         with c_faixa:
             _faixas = {"EI01": "👶 Bebês (0 a 1a6m)", "EI02": "🧒 Crianças (1a7m a 3a11m)", "Ambas": "Mista"}
-            faixa_sel = st.selectbox("Faixa Etária (BNCC)", options=list(_faixas.keys()), format_func=lambda x: _faixas[x])
+            faixa_sel = st.selectbox("Faixa Etária", options=list(_faixas.keys()), format_func=lambda x: _faixas[x])
 
         c_dur, c_camp = st.columns(2)
         with c_dur:
-            duracao = st.selectbox("⏱️ Duração", ["Bimestral", "Mensal", "Semanal", "Diário", "Outro"])
+            duracao = st.selectbox("⏱️ Duração", ["Diário", "Semanal", "Quinzenal", "Mensal", "Bimestral"])
         with c_camp:
             _campos = {
-                "Todos": "🔍 Todos os campos (busca geral)",
+                "Todos": "🔍 Todos os campos",
                 "EO": "🤝 O eu, o outro e o nós",
                 "CG": "🏃 Corpo, gestos e movimentos",
                 "TS": "🎨 Traços, sons, cores e formas",
-                "EF": "💬 Escuta, fala, pensamento e imaginação",
-                "ET": "🔢 Espaços, tempos, quantidades e relações",
+                "EF": "💬 Escuta, fala, pensamento...",
+                "ET": "🔢 Espaços, tempos...",
             }
-            campo_sel = st.selectbox("Área / Campo Principal", options=list(_campos.keys()), format_func=lambda x: _campos[x])
+            campo_sel = st.selectbox("Campo Principal", options=list(_campos.keys()), format_func=lambda x: _campos[x])
 
-        tema = st.text_input("🎯 Tema / Foco (usado para buscar na BNCC)", placeholder="Ex: Explorar movimentos e gestos...")
+        tema = st.text_input("🎯 Tema / Atividade Principal", placeholder="Ex: Brincadeira com argila e água")
         
-        st.markdown("**Estrutura Pedagógica:**")
-        justificativa = st.text_area("📖 Justificativa", placeholder="Por que essa sequência é importante? Ex: Essa sequência favorece o desenvolvimento motor...", height=80)
-        obj_geral = st.text_area("🎯 Objetivo Geral", placeholder="Ex: Promover experiências corporais que favoreçam o movimento...", height=80)
-        
-        st.markdown("**Atividades (Opcional):**")
-        st.caption("Você pode preencher as atividades aqui ou deixar em branco para preencher depois no Word.")
-        ativ1 = st.text_input("Atividade 1 (Nome)", placeholder="Ex: Chute na bola")
-        desc1 = st.text_area("Descrição Ativ. 1", placeholder="Como será a atividade...", height=68, label_visibility="collapsed")
-        
-        ativ2 = st.text_input("Atividade 2 (Nome)", placeholder="Ex: Circuito Sensorial")
-        desc2 = st.text_area("Descrição Ativ. 2", placeholder="Como será a atividade...", height=68, label_visibility="collapsed")
-
-        avaliacao = st.text_area("📝 Avaliação", placeholder="Como será avaliado? Ex: A avaliação será através da observação diária...", height=80)
-
         st.markdown("<br>", unsafe_allow_html=True)
-        buscar = st.button("🔍  Encontrar objetivos BNCC para esta aula", type="primary", use_container_width=True)
+        buscar = st.button("🔍  1. Encontrar objetivos BNCC", type="primary", use_container_width=True)
 
     with col_result:
-        if buscar:
+        if buscar or st.session_state.get("bncc_buscados"):
+            st.session_state.bncc_buscados = True
+            
             if not tema.strip():
                 st.error("⚠️ Escreva o Tema/Foco da aula para podermos buscar os objetivos na BNCC.")
                 return
@@ -611,79 +464,124 @@ def pagina_plano_aula():
                 resultados = engine.buscar(texto=tema, faixa=faixa_filtro, campo=campo_filtro)
 
             if resultados:
-                st.markdown(f"""<div class="card card-verde" style="padding:0.8rem 1.2rem; margin-bottom:1rem;">
-                    <div style="color:#10B981; font-weight:600;">✅ Encontrei {len(resultados)} objetivo(s) da BNCC</div>
-                    <div style="color:#94A3B8; font-size:0.82rem; margin-top:0.2rem;">Marque os que deseja incluir na sua Sequência:</div>
-                </div>""", unsafe_allow_html=True)
-
+                st.markdown("**2. Escolha os Códigos BNCC:**")
                 selecionados = []
                 for obj in resultados:
-                    faixa_tag = "tag-ei01" if obj["faixa"] == "EI01" else "tag-ei02"
-                    faixa_label = "Bebês" if obj["faixa"] == "EI01" else "Crianças maiores"
-                    col_info, col_check = st.columns([11, 1])
-                    with col_info:
-                        st.markdown(
-                            f'<span class="badge-bncc">{obj["codigo"]}</span>&nbsp;<span class="{faixa_tag}">{faixa_label}</span>'
-                            f'&nbsp;<span style="color:#64748B; font-size:0.76rem;">{obj["campo_nome"]}</span>',
-                            unsafe_allow_html=True,
+                    if st.checkbox(f"{obj['codigo']} - {obj['descricao']}", value=True, key=f"obj_{obj['codigo']}"):
+                        selecionados.append(obj)
+                
+                st.session_state.objetivos_selecionados = selecionados
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("✨ 2. Gerar Plano Completo com IA", type="primary", use_container_width=True):
+                    with st.spinner("A Inteligência Artificial está escrevendo seu plano... Isso pode levar uns 10 segundos."):
+                        from modules.chatbot import ProfaBot
+                        bot = ProfaBot()
+                        plano_gerado = bot.gerar_plano_completo(
+                            tema=tema,
+                            faixa=_faixas[faixa_sel],
+                            campo=_campos.get(campo_sel, campo_sel),
+                            objetivos=selecionados
                         )
-                        st.markdown(f'<div style="color:#CBD5E1; font-size:0.88rem; margin:3px 0 10px 4px;">{obj["descricao"]}</div>', unsafe_allow_html=True)
-                    with col_check:
-                        if st.checkbox("", key=f"obj_{obj['codigo']}", value=True, label_visibility="collapsed"):
-                            selecionados.append(obj)
-                    st.divider()
-
-                if selecionados:
-                    atividades = []
-                    if ativ1 or desc1: atividades.append({"nome": ativ1, "descricao": desc1})
-                    if ativ2 or desc2: atividades.append({"nome": ativ2, "descricao": desc2})
-
-                    st.session_state.plano_atual = {
-                        "titulo": titulo_sd if titulo_sd else "Sequência Didática",
-                        "tema": tema,
-                        "segmento": segmento,
-                        "faixa": _faixas[faixa_sel],
-                        "campo": _campos.get(campo_sel, campo_sel),
-                        "duracao": duracao,
-                        "justificativa": justificativa,
-                        "obj_geral": obj_geral,
-                        "avaliacao": avaliacao,
-                        "atividades": atividades,
-                        "objetivos_bncc": selecionados,
-                    }
-                    
-                    st.markdown("**⬇️ Exportar Documento**")
-                    c_word, c_pdf = st.columns(2)
-                    
-                    exportador = Exportador()
-                    
-                    with c_word:
-                        doc_word = exportador.gerar_sd_word(st.session_state.plano_atual)
-                        nome_word = f"SD_{tema[:15].replace(' ', '_').lower()}.docx"
-                        st.download_button("📄 Baixar em Word", data=doc_word, file_name=nome_word, 
-                                           mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
-                                           use_container_width=True, type="primary")
-                    
-                    with c_pdf:
-                        doc_pdf = exportador.gerar_sd_pdf(st.session_state.plano_atual)
-                        nome_pdf = f"SD_{tema[:15].replace(' ', '_').lower()}.pdf"
-                        st.download_button("📕 Baixar em PDF", data=doc_pdf, file_name=nome_pdf, 
-                                           mime="application/pdf", 
-                                           use_container_width=True)
+                        if plano_gerado:
+                            st.session_state.plano_gerado = plano_gerado
+                            st.success("Plano gerado com sucesso! Role a página para baixo para revisar.")
+                        else:
+                            st.error("Houve um erro ao gerar o plano. Tente novamente.")
             else:
                 st.warning("Não encontrei objetivos para essas palavras. Tente descrever de outro jeito.")
         else:
-            st.markdown("""<div class="card" style="text-align:center; padding:3rem 1rem;">
-                <div style="font-size:3rem;">✏️</div>
-                <div style="color:#334155; font-size:1.3rem; font-weight:700; margin:0.5rem 0;">Pronta para planejar?</div>
-                <div style="color:#475569; font-size:0.9rem;">Preencha o formulário e clique em<br><strong style="color:#10B981;">Encontrar objetivos BNCC</strong></div>
-            </div>""", unsafe_allow_html=True)
+            st.info("👈 Preencha os dados e clique em 'Encontrar objetivos BNCC'")
+
+    # Seção de Revisão do Plano Gerado
+    if st.session_state.get("plano_gerado"):
+        st.divider()
+        st.markdown("### 📝 Revisão do Plano Gerado")
+        
+        pg = st.session_state.plano_gerado
+        
+        col_ed1, col_ed2 = st.columns(2)
+        with col_ed1:
+            justificativa = st.text_area("Justificativa", value=pg.get("justificativa", ""), height=150)
+        with col_ed2:
+            obj_geral = st.text_area("Objetivo Geral", value=pg.get("obj_geral", ""), height=150)
+            
+        st.markdown("**Atividades Propostas:**")
+        atividades = []
+        for i, ativ in enumerate(pg.get("atividades", [])):
+            c_a1, c_a2 = st.columns([1, 3])
+            with c_a1:
+                nome_a = st.text_input(f"Nome Ativ {i+1}", value=ativ.get("nome", ""))
+            with c_a2:
+                desc_a = st.text_area(f"Descrição Ativ {i+1}", value=ativ.get("descricao", ""), height=100)
+            atividades.append({"nome": nome_a, "descricao": desc_a})
+            
+        avaliacao = st.text_area("Avaliação", value=pg.get("avaliacao", ""))
+        
+        # Feedback para a IA
+        st.markdown("---")
+        st.markdown("**🤖 Não gostou de algo? Peça para a IA refazer:**")
+        feedback_ia = st.text_input("O que você quer mudar?", placeholder="Ex: Achei as atividades muito complexas para bebês, faça algo mais simples com música.")
+        if st.button("🔄 Refazer plano com estas instruções", use_container_width=False):
+            with st.spinner("Reescrevendo plano..."):
+                from modules.chatbot import ProfaBot
+                bot = ProfaBot()
+                novo_plano = bot.gerar_plano_completo(
+                    tema=tema,
+                    faixa=_faixas[faixa_sel],
+                    campo=_campos.get(campo_sel, campo_sel),
+                    objetivos=st.session_state.objetivos_selecionados,
+                    feedbacks=feedback_ia
+                )
+                if novo_plano:
+                    st.session_state.plano_gerado = novo_plano
+                    st.rerun()
+
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.markdown("### ⬇️ Tudo certo? Baixar Documento!")
+        
+        # Prepara o objeto final para exportação
+        st.session_state.plano_atual = {
+            "titulo": titulo_sd if titulo_sd else "Sequência Didática",
+            "tema": tema,
+            "segmento": segmento,
+            "faixa": _faixas[faixa_sel],
+            "campo": _campos.get(campo_sel, campo_sel),
+            "duracao": duracao,
+            "justificativa": justificativa,
+            "obj_geral": obj_geral,
+            "avaliacao": avaliacao,
+            "atividades": atividades,
+            "objetivos_bncc": st.session_state.objetivos_selecionados,
+        }
+        
+        c_word, c_pdf = st.columns(2)
+        from modules.exportador import Exportador
+        exportador = Exportador()
+        
+        with c_word:
+            doc_word = exportador.gerar_sd_word(st.session_state.plano_atual)
+            nome_word = f"SD_{tema[:15].replace(' ', '_').lower()}.docx"
+            st.download_button("📄 Baixar em Word", data=doc_word, file_name=nome_word, 
+                               mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
+                               use_container_width=True, type="primary")
+        
+        with c_pdf:
+            doc_pdf = exportador.gerar_sd_pdf(st.session_state.plano_atual)
+            nome_pdf = f"SD_{tema[:15].replace(' ', '_').lower()}.pdf"
+            st.download_button("📕 Baixar em PDF", data=doc_pdf, file_name=nome_pdf, 
+                               mime="application/pdf", 
+                               use_container_width=True)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 
 def pagina_alunos():
     st.markdown('<div class="sec">👶 Relatório dos Alunos</div>', unsafe_allow_html=True)
+    
+    from modules.db import BancoDados
+    db = BancoDados()
+    alunos_db = db.get_alunos()
 
     tab1, tab2 = st.tabs(["📋  Minha Turma", "📊  Registro de Desenvolvimento"])
 
@@ -702,12 +600,11 @@ def pagina_alunos():
             if st.button("➕ Adicionar", type="primary", use_container_width=True):
                 if nome_aluno.strip():
                     faixa_cod = "EI01" if "EI01" in faixa_aluno else "EI02"
-                    nomes = [a["nome"].lower() for a in st.session_state.alunos]
+                    nomes = [a["nome"].lower() for a in alunos_db]
                     if nome_aluno.strip().lower() in nomes:
                         st.error("Já existe um aluno com esse nome.")
                     else:
-                        st.session_state.alunos.append(
-                            {"nome": nome_aluno.strip(), "faixa": faixa_cod, "evolucao": {}})
+                        db.add_aluno(nome_aluno.strip(), faixa_cod)
                         st.success(f"✅ {nome_aluno} adicionado(a)!")
                         st.rerun()
                 else:
@@ -715,14 +612,14 @@ def pagina_alunos():
 
         st.divider()
 
-        if st.session_state.alunos:
-            st.markdown(f"**{len(st.session_state.alunos)} criança(s) na turma:**")
-            for i, aluno in enumerate(st.session_state.alunos):
+        if alunos_db:
+            st.markdown(f"**{len(alunos_db)} criança(s) na turma:**")
+            for aluno in alunos_db:
                 c_nome, c_prog, c_del = st.columns([3, 2, 0.4])
                 with c_nome:
                     tag = "tag-ei01" if aluno["faixa"] == "EI01" else "tag-ei02"
                     label = "Bebê" if aluno["faixa"] == "EI01" else "Criança maior"
-                    st.markdown(f'<span style="color:#F1F5F9; font-weight:500;">👤 {aluno["nome"]}</span>'
+                    st.markdown(f'<span style="color:#1E293B; font-weight:500;">👤 {aluno["nome"]}</span>'
                                 f'&nbsp;&nbsp;<span class="{tag}">{label}</span>',
                                 unsafe_allow_html=True)
                 with c_prog:
@@ -731,39 +628,39 @@ def pagina_alunos():
                     st.markdown(f'<span style="color:#475569; font-size:0.82rem;">'
                                 f'{n_av} avaliados · {n_at} atingidos</span>', unsafe_allow_html=True)
                 with c_del:
-                    if st.button("🗑️", key=f"del_{i}"):
-                        st.session_state.alunos.pop(i)
+                    if st.button("🗑️", key=f"del_{aluno['id']}"):
+                        db.delete_aluno(aluno["id"])
                         st.rerun()
                 st.divider()
         else:
             st.info("Ainda não há crianças cadastradas. Adicione os alunos da sua turma acima.")
 
     with tab2:
-        if not st.session_state.alunos:
+        if not alunos_db:
             st.info("Cadastre os alunos na aba **Minha Turma** primeiro.")
             return
 
         aluno_nome = st.selectbox("Qual criança você quer avaliar?",
-                                  [a["nome"] for a in st.session_state.alunos])
-        idx = next(i for i, a in enumerate(st.session_state.alunos) if a["nome"] == aluno_nome)
-        aluno = st.session_state.alunos[idx]
+                                  [a["nome"] for a in alunos_db])
+        aluno = next(a for a in alunos_db if a["nome"] == aluno_nome)
 
         _status_opts = {"A": "✅ Já consegue fazer", "D": "🔄 Está aprendendo", "N": "⏳ Ainda não iniciou"}
 
         st.markdown(
             f'<div style="color:#64748B; font-size:0.85rem; margin:0.5rem 0 1rem;">'
-            f"Para cada habilidade abaixo, marque como <strong style='color:#F1F5F9;'>{aluno_nome}</strong> está:</div>",
+            f"Para cada habilidade abaixo, marque como <strong style='color:#1E293B;'>{aluno_nome}</strong> está:</div>",
             unsafe_allow_html=True)
 
         for campo_nome, objetivos in engine.get_objetivos_por_faixa(aluno["faixa"]).items():
             n_at = sum(1 for o in objetivos if aluno["evolucao"].get(o["codigo"]) == "A")
-            with st.expander(f"📌 {campo_nome}  —  {n_at}/{len(objetivos)} conquistados"):
+            # Correção do translate quebrando o expander: evitamos emoji no título se possivel, ou usamos icon nativo (Streamlit 1.35+)
+            with st.expander(f"{campo_nome} — {n_at}/{len(objetivos)} conquistados", icon="📌"):
                 for obj in objetivos:
                     c_desc, c_st = st.columns([4, 1.4])
                     with c_desc:
                         st.markdown(
                             f'<span class="badge-bncc">{obj["codigo"]}</span>'
-                            f'<span style="color:#CBD5E1; font-size:0.85rem; margin-left:6px;">{obj["descricao"]}</span>',
+                            f'<span style="color:#334155; font-size:0.85rem; margin-left:6px;">{obj["descricao"]}</span>',
                             unsafe_allow_html=True)
                     with c_st:
                         status = aluno["evolucao"].get(obj["codigo"], "N")
@@ -772,7 +669,12 @@ def pagina_alunos():
                                             index=list(_status_opts.keys()).index(status),
                                             key=f"st_{aluno_nome}_{obj['codigo']}",
                                             label_visibility="collapsed")
-                        st.session_state.alunos[idx]["evolucao"][obj["codigo"]] = novo
+                        
+                        if novo != status:
+                            evolucao_atual = aluno["evolucao"].copy()
+                            evolucao_atual[obj["codigo"]] = novo
+                            db.update_evolucao(aluno["id"], evolucao_atual)
+                            st.rerun()
                     st.divider()
 
         st.markdown("<br>", unsafe_allow_html=True)
@@ -786,7 +688,6 @@ def pagina_alunos():
                 data=doc_bytes, file_name=nome_arquivo,
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 use_container_width=True)
-
 
 # ──────────────────────────────────────────────────────────────────────────────
 

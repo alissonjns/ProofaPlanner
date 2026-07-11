@@ -123,3 +123,41 @@ class ProfaBot:
                 f"⚠️ Não consegui me conectar agora. Erro: `{erro}`\n\n"
                 "Tente novamente em alguns instantes."
             )
+
+    def gerar_plano_completo(self, tema: str, faixa: str, campo: str, objetivos: list, feedbacks: str = "") -> dict:
+        """Gera um plano completo no formato JSON usando os dados e objetivos fornecidos."""
+        
+        objs_texto = "\n".join([f"[{o['codigo']}] {o['descricao']}" for o in objetivos])
+        
+        prompt = f"""
+Você é uma especialista em pedagogia da Educação Infantil. Escreva o conteúdo de um plano de aula completo baseado nestes parâmetros:
+Tema: {tema}
+Faixa Etária: {faixa}
+Campo Principal: {campo}
+Objetivos BNCC Escolhidos:
+{objs_texto}
+
+{('Atenção, a professora pediu a seguinte alteração no plano anterior: ' + feedbacks) if feedbacks else ''}
+
+Retorne APENAS um JSON válido com a seguinte estrutura (sem markdown extra, sem ```json, apenas as chaves e valores):
+{{
+    "justificativa": "Texto explicando a importância pedagógica...",
+    "obj_geral": "O objetivo geral formatado de forma clara...",
+    "atividades": [
+        {{"nome": "Nome criativo da atividade 1", "descricao": "Passo a passo bem detalhado da atividade 1..."}},
+        {{"nome": "Nome criativo da atividade 2", "descricao": "Passo a passo bem detalhado da atividade 2..."}}
+    ],
+    "avaliacao": "Como o aprendizado será observado e registrado..."
+}}
+"""
+        try:
+            resp = self.model.generate_content(prompt)
+            texto = resp.text.strip()
+            if texto.startswith("```json"):
+                texto = texto.replace("```json", "").replace("```", "").strip()
+            
+            import json
+            return json.loads(texto)
+        except Exception as e:
+            print(f"Erro na geração do plano: {e}")
+            return None
