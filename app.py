@@ -26,6 +26,12 @@ st.markdown("""
 <style>
 /* Remove margin around main container to look cleaner */
 .block-container { padding-top: 2rem; padding-bottom: 2rem; max-width: 900px; }
+
+/* Esconde menu do Streamlit Cloud */
+#MainMenu {visibility: hidden;}
+header {visibility: hidden;}
+footer {visibility: hidden;}
+
 /* Correção para o Bug do Google Tradutor (_arrowRight_) */
 </style>
 <meta name="google" content="notranslate">
