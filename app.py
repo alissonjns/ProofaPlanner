@@ -29,8 +29,10 @@ st.markdown("""
 
 /* Esconde menu do Streamlit Cloud */
 #MainMenu {visibility: hidden;}
-header {visibility: hidden;}
-footer {visibility: hidden;}
+header {display: none !important;}
+footer {display: none !important;}
+.viewerBadge_container__1QSob {display: none !important;}
+[data-testid="manage-app-button"] {display: none !important;}
 
 /* Correção para o Bug do Google Tradutor (_arrowRight_) */
 </style>
@@ -467,10 +469,10 @@ def pagina_plano_aula():
             campo_filtro = None if campo_sel == "Todos" else campo_sel
 
             with st.spinner("Buscando os objetivos certos para você..."):
-                resultados = engine.buscar(texto=tema, faixa=faixa_filtro, campo=campo_filtro)
+                resultados = engine.buscar(texto=tema, faixa=faixa_filtro, campo=campo_filtro)[:4] # Limita aos 4 melhores resultados
 
             if resultados:
-                st.markdown("**2. Escolha os Códigos BNCC:**")
+                st.markdown("**2. Escolha os Códigos BNCC (Mostrando os 4 melhores):**")
                 selecionados = []
                 for obj in resultados:
                     if st.checkbox(f"{obj['codigo']} - {obj['descricao']}", value=True, key=f"obj_{obj['codigo']}"):
