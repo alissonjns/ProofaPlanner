@@ -145,7 +145,9 @@ Retorne APENAS um JSON válido com a seguinte estrutura (sem markdown extra, sem
     "obj_geral": "O objetivo geral formatado de forma clara...",
     "atividades": [
         {{"nome": "Nome criativo da atividade 1", "descricao": "Passo a passo bem detalhado da atividade 1..."}},
-        {{"nome": "Nome criativo da atividade 2", "descricao": "Passo a passo bem detalhado da atividade 2..."}}
+        {{"nome": "Nome criativo da atividade 2", "descricao": "Passo a passo bem detalhado da atividade 2..."}},
+        {{"nome": "Nome criativo da atividade 3", "descricao": "Passo a passo bem detalhado da atividade 3..."}},
+        // ... Gere de 5 a 10 atividades sequenciais para cobrir todo o período!
     ],
     "avaliacao": "Como o aprendizado será observado e registrado..."
 }}

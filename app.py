@@ -517,12 +517,10 @@ def pagina_plano_aula():
         st.markdown("**Atividades Propostas:**")
         atividades = []
         for i, ativ in enumerate(pg.get("atividades", [])):
-            c_a1, c_a2 = st.columns([1, 3])
-            with c_a1:
-                nome_a = st.text_input(f"Nome Ativ {i+1}", value=ativ.get("nome", ""))
-            with c_a2:
-                desc_a = st.text_area(f"Descrição Ativ {i+1}", value=ativ.get("descricao", ""), height=100)
-            atividades.append({"nome": nome_a, "descricao": desc_a})
+            with st.expander(f"🧩 Atividade {i+1}: {ativ.get('nome', '')}", expanded=False):
+                nome_a = st.text_input("Nome da Atividade", value=ativ.get("nome", ""), key=f"n_{i}")
+                desc_a = st.text_area("Passo a Passo", value=ativ.get("descricao", ""), height=150, key=f"d_{i}")
+                atividades.append({"nome": nome_a, "descricao": desc_a})
             
         avaliacao = st.text_area("Avaliação", value=pg.get("avaliacao", ""))
         
