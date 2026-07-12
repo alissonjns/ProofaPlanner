@@ -532,28 +532,25 @@ def pagina_boas_vindas():
         # ── PASSO 2: Como funciona ────────────────────────────────────────
         elif step == 2:
             st.markdown("""
-            <div class="hero-title" style="font-size:2rem; text-align:center; margin-bottom:1.5rem;">
+            <div style="font-size:2rem; font-weight:800; color:#0F172A; text-align:center; margin-bottom:1.5rem;">
                 Como o sistema funciona?
             </div>
             """, unsafe_allow_html=True)
 
             _passos = [
-                ("📋", "card-azul",  "1. Você coloca o modelo da escola",
-                 "Se a escola te deu um formulário de plano de aula no Word ou Excel, você o adiciona aqui. "
-                 "O sistema usa ele como base. Se não tiver, usamos um modelo pronto."),
-                ("✏️", "card-verde", "2. Você digita o tema da aula",
-                 "Escreve o tema que você planejou, como \"Brincadeira com argila\" ou \"Música e ritmo\". "
-                 "O sistema encontra automaticamente os objetivos BNCC certos para você!"),
-                ("⬇️", "card-roxo",  "3. Você baixa o documento pronto",
-                 "Clique em um botão e o plano de aula já sai preenchido no formato Word, "
-                 "pronto para imprimir ou entregar à coordenação."),
+                ("📋", "#EFF6FF", "#1D4ED8", "#BFDBFE", "1. Você coloca o modelo da escola",
+                 "Se a escola te deu um formulário de plano de aula no Word ou Excel, você o adiciona aqui. O sistema usa ele como base. Se não tiver, usamos um modelo pronto."),
+                ("✏️", "#ECFDF5", "#065F46", "#A7F3D0", "2. Você digita o tema da aula",
+                 "Escreve o tema que você planejou, como 'Brincadeira com argila' ou 'Música e ritmo'. O sistema encontra automaticamente os objetivos BNCC certos para você!"),
+                ("⬇️", "#FFF7ED", "#9A3412", "#FED7AA", "3. Você baixa o documento pronto",
+                 "Clique em um botão e o plano de aula já sai preenchido no formato Word, pronto para imprimir ou entregar à coordenação."),
             ]
-            for icon, cls, titulo, desc in _passos:
+            for icon, bg, cor, border, titulo, desc in _passos:
                 st.markdown(f"""
-                <div class="card {cls}" style="padding:1.2rem 1.5rem;">
+                <div style="background:{bg}; border:1.5px solid {border}; border-radius:14px; padding:1.3rem 1.5rem; margin-bottom:0.8rem;">
                     <div style="font-size:1.5rem; margin-bottom:0.4rem;">{icon}</div>
-                    <div style="font-weight:700; color:#F1F5F9; margin-bottom:0.3rem;">{titulo}</div>
-                    <div style="color:#94A3B8; font-size:0.9rem; line-height:1.6;">{desc}</div>
+                    <div style="font-weight:700; color:{cor}; margin-bottom:0.3rem; font-size:1rem;">{titulo}</div>
+                    <div style="color:#475569; font-size:0.88rem; line-height:1.6;">{desc}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -571,12 +568,8 @@ def pagina_boas_vindas():
         # ── PASSO 3: Começar ──────────────────────────────────────────────
         elif step == 3:
             st.markdown("""
-            <div class="hero-title" style="font-size:2rem; text-align:center; margin-bottom:0.5rem;">
-                Tudo pronto! 🎉
-            </div>
-            <div class="hero-sub" style="text-align:center; margin-bottom:1.5rem;">
-                Por onde você quer começar?
-            </div>
+            <div style="font-size:2rem; font-weight:800; color:#0F172A; text-align:center; margin-bottom:0.5rem;">Tudo pronto! 🎉</div>
+            <div style="color:#64748B; font-size:1rem; text-align:center; margin-bottom:1.5rem;">Por onde você quer começar?</div>
             """, unsafe_allow_html=True)
 
             _opcoes = [
@@ -589,11 +582,11 @@ def pagina_boas_vindas():
             ]
             for pag, icon, titulo, desc in _opcoes:
                 st.markdown(f"""
-                <div class="card" style="padding:1rem 1.3rem; display:flex; align-items:center; gap:1rem;">
+                <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:14px; padding:1rem 1.3rem; display:flex; align-items:center; gap:1rem; margin-bottom:0.4rem; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                     <div style="font-size:2rem; flex-shrink:0;">{icon}</div>
                     <div>
-                        <div style="font-weight:700; color:#F1F5F9;">{titulo}</div>
-                        <div style="color:#64748B; font-size:0.85rem;">{desc}</div>
+                        <div style="font-weight:700; color:#0F172A; font-size:0.95rem;">{titulo}</div>
+                        <div style="color:#64748B; font-size:0.83rem;">{desc}</div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -615,24 +608,27 @@ def pagina_boas_vindas():
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def pagina_inicio():
-    st.markdown('<div class="hero-title">Olá, Professora! 👋</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Escolha o que você quer fazer hoje:</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:2rem; font-weight:800; color:#0F172A; margin-bottom:0.3rem;">Olá, Professora! 👋</div>', unsafe_allow_html=True)
+    st.markdown('<div style="color:#64748B; font-size:1rem; margin-bottom:0.5rem;">Escolha o que você quer fazer hoje:</div>', unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns(3)
     _atalhos = [
         ("plano",    "✏️", "Criar Plano de Aula",
-         "Digite o tema da aula e o sistema monta o plano com os objetivos BNCC certos", "card-verde"),
+         "Digite o tema da aula e o sistema monta o plano com os objetivos BNCC certos",
+         "#ECFDF5", "#A7F3D0", "#065F46"),
         ("alunos",   "👶", "Relatório dos Alunos",
-         "Registre como cada aluno está se desenvolvendo e gere o relatório bimestral", "card-azul"),
+         "Registre como cada aluno está se desenvolvendo e gere o relatório bimestral",
+         "#EFF6FF", "#BFDBFE", "#1D4ED8"),
         ("profabot", "💬", "Tirar uma Dúvida",
-         "Pergunte qualquer coisa sobre a BNCC ou sobre como usar o sistema", "card-roxo"),
+         "Pergunte qualquer coisa sobre a BNCC ou sobre como usar o sistema",
+         "#F5F3FF", "#DDD6FE", "#5B21B6"),
     ]
-    for col, (pag, icon, titulo, desc, cls) in zip([c1, c2, c3], _atalhos):
+    for col, (pag, icon, titulo, desc, bg, border, cor) in zip([c1, c2, c3], _atalhos):
         with col:
-            st.markdown(f"""<div class="card {cls}">
+            st.markdown(f"""<div style="background:{bg}; border:1.5px solid {border}; border-radius:14px; padding:1.5rem; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
                 <div style="font-size:2rem; margin-bottom:0.5rem;">{icon}</div>
-                <div style="font-weight:700; color:#F1F5F9; margin-bottom:0.3rem; font-size:1rem;">{titulo}</div>
+                <div style="font-weight:700; color:{cor}; margin-bottom:0.3rem; font-size:1rem;">{titulo}</div>
                 <div style="color:#475569; font-size:0.82rem; line-height:1.5;">{desc}</div>
             </div>""", unsafe_allow_html=True)
             if st.button(titulo, key=f"at_{pag}", use_container_width=True, type="primary"):
@@ -648,8 +644,8 @@ def pagina_inicio():
         "Argila e massinha de modelar se encaixam no campo 'Traços, Sons, Cores e Formas' — experimente digitar esse tema no Plano de Aula!",
         "Conflitos entre crianças são oportunidades pedagógicas — a BNCC tem objetivos específicos para isso no campo 'O eu, o outro e o nós'.",
     ]
-    st.markdown(f"""<div class="card">
-        <div style="color:#94A3B8; font-size:0.93rem; line-height:1.7;">{random.choice(_dicas)}</div>
+    st.markdown(f"""<div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:14px; padding:1.2rem 1.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+        <div style="color:#334155; font-size:0.93rem; line-height:1.7;">{random.choice(_dicas)}</div>
     </div>""", unsafe_allow_html=True)
 
     # Link para retornar ao tour
