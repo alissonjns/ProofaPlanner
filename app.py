@@ -50,7 +50,11 @@ footer {display: none !important;}
 /* ── Divider ── */
 hr { border-color: #E2E8F0 !important; }
 
-/* ── Inputs ── */
+/* ── Inputs e Placeholders ── */
+::placeholder {
+    color: #94A3B8 !important;
+    opacity: 1 !important;
+}
 [data-testid="stTextInput"] input,
 [data-testid="stTextArea"] textarea {
     background-color: #FFFFFF !important;
@@ -212,6 +216,21 @@ p { color: #1E293B !important; }
 [data-testid="stExpander"] summary {
     color: #1E293B !important;
     font-weight: 600 !important;
+    background-color: #FFFFFF !important;
+}
+[data-testid="stExpanderDetails"] {
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
+}
+
+/* ── File Uploader ── */
+[data-testid="stFileUploader"] {
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
+}
+[data-testid="stFileUploader"] section {
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
 }
 
 /* ── Info / warning / success ── */
@@ -457,19 +476,6 @@ if not _NA_TOUR:
     for col, (key, (pag, icon, label)) in zip(nav_cols, _nav_options.items()):
         with col:
             is_active = st.session_state.pagina == pag
-            btn_style = (
-                "background:linear-gradient(135deg,#10B981,#059669);color:white;border:none;"
-                "border-radius:20px;padding:6px 0;font-weight:700;font-size:0.82rem;"
-            ) if is_active else (
-                "background:#FFFFFF;color:#334155;border:1.5px solid #CBD5E1;"
-                "border-radius:20px;padding:6px 0;font-weight:600;font-size:0.82rem;"
-            )
-            st.markdown(
-                f"""<div style="text-align:center;">
-                    <button onclick="" style="{btn_style}width:100%;cursor:pointer;">{icon} {label}</button>
-                </div>""",
-                unsafe_allow_html=True
-            )
             if st.button(f"{icon} {label}", key=f"nav_{key}", use_container_width=True,
                          type="primary" if is_active else "secondary"):
                 st.session_state.pagina = pag
