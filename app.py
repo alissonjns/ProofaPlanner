@@ -27,7 +27,7 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* ── Reset & Base ── */
-* { font-family: 'Inter', sans-serif !important; }
+html, body { font-family: 'Inter', sans-serif; }
 html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
     background-color: #F8FAFC !important;
     color: #1E293B !important;
@@ -766,9 +766,9 @@ def pagina_modelo():
     with col_info:
         st.markdown("""<div class="card">
             <div style="font-weight:700; color:#10B981; margin-bottom:1rem;">📌 Para que serve isso?</div>
-            <div style="color:#94A3B8; font-size:0.87rem; line-height:2;">
+            <div style="color:#475569; font-size:0.87rem; line-height:2;">
                 A sua escola provavelmente tem um formulário específico para o plano de aula.<br><br>
-                Ao adicionar esse arquivo aqui, o sistema vai <strong style="color:#CBD5E1;">gerar os documentos
+                Ao adicionar esse arquivo aqui, o sistema vai <strong style="color:#1E293B;">gerar os documentos
                 no formato que a sua escola pede</strong>, já preenchido com os objetivos BNCC certos. 📋
             </div>
         </div>""", unsafe_allow_html=True)
@@ -954,7 +954,7 @@ def pagina_plano_aula():
                     st.rerun()
             with c_next:
                 if selecionados:
-                    if st.button(f"🤖 Gerar Plano com IA ({len(selecionados)} objetivo(s)) →", type="primary", use_container_width=True):
+                    if st.button(f"🤖 Gerar Plano Completo com IA →", type="primary", use_container_width=True):
                         with st.spinner("✨ A IA está escrevendo sua Sequência Didática completa... isso pode levar uns 15 segundos!"):
                             from modules.chatbot import ProfaBot
                             bot = ProfaBot()
@@ -1085,7 +1085,7 @@ def pagina_plano_aula():
                 "📄 Baixar em Word (.docx)",
                 data=doc_word, file_name=nome_word,
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                use_container_width=True, type="primary"
+                use_container_width=True
             )
         with c_pdf:
             doc_pdf = exportador.gerar_sd_pdf(plano_final)
