@@ -447,26 +447,33 @@ if not _NA_TOUR:
     """, unsafe_allow_html=True)
 
     _nav_options = {
-        "🏠 Início": "inicio",
-        "📋 Meu Modelo": "modelo",
-        "✏️ Criar Plano": "plano",
-        "👶 Alunos": "alunos",
-        "💬 ProfaBot": "profabot"
+        "Inicio": ("inicio", "🏠", "Início"),
+        "Modelo": ("modelo", "📋", "Meu Modelo"),
+        "Plano":  ("plano",  "✏️", "Criar Plano"),
+        "Alunos": ("alunos", "👶", "Alunos"),
+        "Bot":    ("profabot","💬", "ProfaBot"),
     }
-
-    # Pegar a chave atual pelo valor
-    current_key = next((k for k, v in _nav_options.items() if v == st.session_state.pagina), "🏠 Início")
-
-    selected = st.pills(
-        "Navegação",
-        options=list(_nav_options.keys()),
-        default=current_key,
-        label_visibility="collapsed"
-    )
-
-    if selected and _nav_options[selected] != st.session_state.pagina:
-        st.session_state.pagina = _nav_options[selected]
-        st.rerun()
+    nav_cols = st.columns(len(_nav_options))
+    for col, (key, (pag, icon, label)) in zip(nav_cols, _nav_options.items()):
+        with col:
+            is_active = st.session_state.pagina == pag
+            btn_style = (
+                "background:linear-gradient(135deg,#10B981,#059669);color:white;border:none;"
+                "border-radius:20px;padding:6px 0;font-weight:700;font-size:0.82rem;"
+            ) if is_active else (
+                "background:#FFFFFF;color:#334155;border:1.5px solid #CBD5E1;"
+                "border-radius:20px;padding:6px 0;font-weight:600;font-size:0.82rem;"
+            )
+            st.markdown(
+                f"""<div style="text-align:center;">
+                    <button onclick="" style="{btn_style}width:100%;cursor:pointer;">{icon} {label}</button>
+                </div>""",
+                unsafe_allow_html=True
+            )
+            if st.button(f"{icon} {label}", key=f"nav_{key}", use_container_width=True,
+                         type="primary" if is_active else "secondary"):
+                st.session_state.pagina = pag
+                st.rerun()
 
     st.divider()
 
@@ -837,8 +844,7 @@ def pagina_plano_aula():
     # ETAPA 1 — DADOS DA AULA
     # ══════════════════════════════════════════════════════════════════════════
     if step == 1:
-        st.markdown("<div class='pp-section-title'>📝 Sobre a Sequência Didática</div>", unsafe_allow_html=True)
-        st.markdown("<div class='pp-card'>", unsafe_allow_html=True)
+        st.markdown("### Dados da Sequência Didática", unsafe_allow_html=False)
 
         titulo_sd = st.text_input(
             "Título da Sequência *",
@@ -857,17 +863,15 @@ def pagina_plano_aula():
 
         c_dur, c_camp = st.columns(2)
         with c_dur:
-            duracao = st.selectbox("⏱️ Duração da SD", ["Diário", "Semanal", "Quinzenal", "Mensal", "Bimestral"])
+            duracao = st.selectbox("Duração da SD", ["Diário", "Semanal", "Quinzenal", "Mensal", "Bimestral"])
         with c_camp:
             campo_sel = st.selectbox("Campo Principal de Experiência", options=list(_campos.keys()), format_func=lambda x: _campos[x])
 
         tema = st.text_input(
-            "🎯 Tema / Atividade Central *",
+            "Tema / Atividade Central *",
             placeholder="Ex: Brincadeira com argila e água",
             help="O tema principal que será trabalhado na sequência"
         )
-
-        st.markdown("</div>", unsafe_allow_html=True)
 
         # Guarda na sessão para usar nas próximas etapas
         st.session_state._sd_titulo = titulo_sd
@@ -1249,25 +1253,39 @@ def pagina_profabot():
     st.divider()
 
     for msg in st.session_state.historico_chat:
-        with st.chat_message(msg["role"], avatar="👩‍🏫" if msg["role"] == "user" else "🤖"):
-            st.markdown(msg["content"])
+        bg = "#EFF6FF" if msg["role"] == "user" else "#F0FDF4"
+        border = "#BFDBFE" if msg["role"] == "user" else "#A7F3D0"
+        avatar = "👩‍🏫" if msg["role"] == "user" else "🤖"
+        st.markdown(
+            f"""<div style="background:{bg};border:1px solid {border};border-radius:12px;
+            padding:0.9rem 1.1rem;margin-bottom:0.5rem;display:flex;gap:10px;align-items:flex-start;">
+                <span style="font-size:1.4rem;flex-shrink:0;">{avatar}</span>
+                <div style="color:#1E293B;font-size:0.93rem;line-height:1.6;">{msg["content"]}</div>
+            </div>""",
+            unsafe_allow_html=True
+        )
 
-    if prompt := st.chat_input("Digite sua pergunta aqui..."):
+    st.markdown("<br>", unsafe_allow_html=True)
+    c_inp, c_btn = st.columns([5, 1])
+    with c_inp:
+        prompt = st.text_input("Sua pergunta", placeholder="Digite sua pergunta aqui...",
+                               label_visibility="collapsed", key="chat_input_field")
+    with c_btn:
+        enviar = st.button("Enviar", type="primary", use_container_width=True)
+
+    if enviar and prompt:
         st.session_state.historico_chat.append({"role": "user", "content": prompt})
-        with st.chat_message("user", avatar="👩‍🏫"):
-            st.markdown(prompt)
-        with st.chat_message("assistant", avatar="🤖"):
-            with st.spinner("Pensando..."):
-                bot = ProfaBot(st.session_state.gemini_key)
-                resp = bot.responder(prompt, st.session_state.historico_chat[:-1])
-            st.markdown(resp)
-            st.session_state.historico_chat.append({"role": "assistant", "content": resp})
+        with st.spinner("Pensando..."):
+            bot = ProfaBot(st.session_state.gemini_key)
+            resp = bot.responder(prompt, st.session_state.historico_chat[:-1])
+        st.session_state.historico_chat.append({"role": "assistant", "content": resp})
+        st.rerun()
 
     if st.session_state.historico_chat:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🗑️  Limpar conversa"):
+        if st.button("Limpar conversa"):
             st.session_state.historico_chat = []
             st.rerun()
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
