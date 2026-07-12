@@ -224,12 +224,16 @@ p { color: #1E293B !important; }
 }
 
 /* ── File Uploader ── */
-[data-testid="stFileUploader"] {
+[data-testid="stFileUploaderDropzone"] {
     background-color: #FFFFFF !important;
-    color: #1E293B !important;
+    border: 1px dashed #e2e8f0 !important;
 }
-[data-testid="stFileUploader"] section {
+[data-testid="stFileUploaderDropzone"] button {
     background-color: #FFFFFF !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+}
+[data-testid="stFileUploader"] {
     color: #1E293B !important;
 }
 
