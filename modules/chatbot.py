@@ -95,7 +95,7 @@ class ProfaBot:
                 
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel(
-            model_name="gemini-pro",
+            model_name="gemini-pro-latest",
             system_instruction=SYSTEM_PROMPT,
         )
 
