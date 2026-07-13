@@ -425,11 +425,8 @@ p { color: #1E293B !important; }
 <meta name="google" content="notranslate">
 """, unsafe_allow_html=True)
 
-# ─── Session State ────────────────────────────────────────────────────────────
-_is_dev = st.query_params.get("dev", "").lower() == "true"
-
 _def = {
-    "pagina": "inicio" if _is_dev else "boas_vindas",   # começa no tour obrigatório (exceto se dev=true)
+    "pagina": "inicio",
     "tour_step": 1,
     "alunos": [],
     "historico_chat": [],
@@ -449,57 +446,39 @@ def _engine():
 engine = _engine()
 
 
-# ─── Detecta documentos na pasta do projeto ───────────────────────────────────
-def detectar_arquivos_locais() -> list[Path]:
-    """Retorna .docx e .xlsx encontrados na mesma pasta do app.py"""
-    pasta = Path(__file__).parent
-    return sorted(
-        [f for f in pasta.iterdir()
-         if f.suffix.lower() in (".docx", ".xlsx", ".xls", ".doc")],
-        key=lambda f: f.name
-    )
-
-
-# ─── Top Navigation ─────────────────────────────────────────────────────────────
-_NA_TOUR = st.session_state.pagina == "boas_vindas"
-
-if not _NA_TOUR:
+# ─── Sidebar Navigation ─────────────────────────────────────────────────────────────
+with st.sidebar:
     st.markdown("""
-    <div class='pp-navbar' style='display:flex; align-items:center; gap:14px;'>
-        <div style='width:46px; height:46px; background:linear-gradient(135deg,#10B981,#059669); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; box-shadow:0 4px 12px rgba(16,185,129,0.3);'>📚</div>
+    <div style='display:flex; align-items:center; gap:12px; margin-bottom:2rem;'>
+        <div style='width:42px; height:42px; background:linear-gradient(135deg,#10B981,#059669); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; box-shadow:0 4px 12px rgba(16,185,129,0.3);'>📚</div>
         <div>
-            <div style='font-size:1.5rem; font-weight:800; color:#0F172A; line-height:1;'>ProfaPlanner</div>
-            <div style='font-size:0.72rem; color:#10B981; letter-spacing:1.5px; font-weight:700; text-transform:uppercase;'>BNCC · Educação Infantil</div>
+            <div style='font-size:1.3rem; font-weight:800; color:#0F172A; line-height:1;'>ProfaPlanner</div>
+            <div style='font-size:0.65rem; color:#10B981; letter-spacing:1px; font-weight:700; text-transform:uppercase;'>BNCC · ED. INFANTIL</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     _nav_options = {
+        "BoasVindas": ("boas_vindas", "🎓", "Primeiros Passos"),
         "Inicio": ("inicio", "🏠", "Início"),
         "Modelo": ("modelo", "📋", "Meu Modelo"),
         "Plano":  ("plano",  "✏️", "Criar Plano"),
         "Alunos": ("alunos", "👶", "Alunos"),
         "Bot":    ("profabot","💬", "ProfaBot"),
     }
-    nav_cols = st.columns(len(_nav_options))
-    for col, (key, (pag, icon, label)) in zip(nav_cols, _nav_options.items()):
-        with col:
-            is_active = st.session_state.pagina == pag
-            if st.button(f"{icon} {label}", key=f"nav_{key}", use_container_width=True,
-                         type="primary" if is_active else "secondary"):
-                st.session_state.pagina = pag
-                st.rerun()
-
-    st.divider()
+    
+    for key, (pag, icon, label) in _nav_options.items():
+        is_active = st.session_state.pagina == pag
+        if st.button(f"{icon}  {label}", key=f"nav_{key}", use_container_width=True,
+                     type="primary" if is_active else "secondary"):
+            st.session_state.pagina = pag
+            st.rerun()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  TOUR OBRIGATÓRIO DE BOAS-VINDAS
 # ═══════════════════════════════════════════════════════════════════════════════
 def pagina_boas_vindas():
-    # Esconde sidebar durante o tour
-    st.markdown("""<style>[data-testid="stSidebar"]{display:none!important}</style>""",
-                unsafe_allow_html=True)
 
     step = st.session_state.tour_step
 
@@ -688,51 +667,6 @@ def pagina_modelo():
     col_upload, col_info = st.columns([1.3, 0.7])
 
     with col_upload:
-
-        # ── Arquivos detectados automaticamente na pasta ──────────────────
-        arquivos_locais = detectar_arquivos_locais()
-        if arquivos_locais:
-            st.markdown("""<div class="card card-verde" style="padding:1rem 1.2rem;">
-                <div style="font-weight:700; color:#10B981; margin-bottom:0.5rem;">
-                    📁 Encontrei este(s) arquivo(s) na pasta do ProfaPlanner:
-                </div>
-            </div>""", unsafe_allow_html=True)
-
-            for arq in arquivos_locais:
-                c_nome, c_btn = st.columns([3, 1])
-                with c_nome:
-                    st.markdown(f'<div style="color:#CBD5E1; padding:0.3rem 0;">📄 <strong>{arq.name}</strong></div>',
-                                unsafe_allow_html=True)
-                with c_btn:
-                    if st.button("Usar este", key=f"usar_{arq.name}", type="primary"):
-                        ext = arq.suffix.lower()
-                        try:
-                            if ext in [".docx", ".doc"]:
-                                from docx import Document
-                                doc = Document(str(arq))
-                                paragrafos = [p.text for p in doc.paragraphs if p.text.strip()]
-                                st.session_state.modelo_escola = {
-                                    "nome": arq.name,
-                                    "tipo": "Word",
-                                    "paragrafos": paragrafos[:15],
-                                    "caminho": str(arq),
-                                }
-                            else:
-                                import pandas as pd
-                                df = pd.read_excel(str(arq))
-                                st.session_state.modelo_escola = {
-                                    "nome": arq.name,
-                                    "tipo": "Excel",
-                                    "colunas": list(df.columns),
-                                    "caminho": str(arq),
-                                }
-                            st.success(f"✅ **{arq.name}** carregado como modelo!")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Não consegui ler o arquivo: {e}")
-
-            st.divider()
-
         # ── Upload manual ─────────────────────────────────────────────────
         st.markdown("**Ou faça o upload de outro arquivo:**")
         arquivo = st.file_uploader(
