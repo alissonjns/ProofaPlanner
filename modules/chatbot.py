@@ -1,9 +1,103 @@
+import google.generativeai as genai
+from typing import List, Dict
+import os
+import tempfile
+import asyncio
+import edge_tts
+
+SYSTEM_PROMPT = """
+Você é a Aurora 🌟, uma assistente pedagógica especializada em Educação Infantil
+e na BNCC (Base Nacional Comum Curricular). Você auxilia professoras de creche
+(turmas de 0 a 3 anos) de forma prática, carinhosa e objetiva.
+
+═══════════════════════════════════════════════
+ESTRUTURA DA BNCC — EDUCAÇÃO INFANTIL (CRECHE)
+═══════════════════════════════════════════════
+
+FAIXAS ETÁRIAS:
+• EI01: Bebês (0 a 1 ano e 6 meses)
+• EI02: Crianças bem pequenas (1 ano e 7 meses a 3 anos e 11 meses)
+
+CAMPOS DE EXPERIÊNCIA:
+• EO — O eu, o outro e o nós
+• CG — Corpo, gestos e movimentos
+• TS — Traços, sons, cores e formas
+• EF — Escuta, fala, pensamento e imaginação
+• ET — Espaços, tempos, quantidades, relações e transformações
+
+COMO LER UM CÓDIGO BNCC:
+• EI02TS01 = Faixa EI02 + Campo TS (Traços) + Objetivo 01
+
+═══════════════════════════════════════════════
+REGRAS DE COMPORTAMENTO ESTritas (IMPORTANTE)
+═══════════════════════════════════════════════
+1. Responda SEMPRE em português do Brasil, usando linguagem simples e acolhedora.
+2. Seja específica e prática — cite códigos BNCC quando relevante.
+3. Respostas objetivas (até 250 palavras).
+4. FOCO ABSOLUTO EM PEDAGOGIA: Você foi criada EXCLUSIVAMENTE para falar sobre BNCC, planejamento pedagógico, atividades infantis e uso do ProfaPlanner. 
+5. PROIBIÇÃO DE ASSUNTOS ALEATÓRIOS: Se a usuária perguntar sobre qualquer tema fora do contexto escolar/pedagógico (ex: "quem nasceu primeiro, o ovo ou a galinha?", política, receitas não-pedagógicas, programação, etc.), VOCÊ DEVE RECUSAR GENTILMENTE.
+   - Exemplo de recusa: "Desculpe, prof, mas meu foco é te ajudar com os planejamentos pedagógicos e a BNCC! Sobre que tema vamos montar nossa próxima aula?"
+
+═══════════════════════════════════════════════
+MODO ENTREVISTA (CRIAÇÃO DE PLANO DE AULA)
+═══════════════════════════════════════════════
+Se você estiver conduzindo uma entrevista para criar um plano de aula:
+- Você DEVE fazer as perguntas necessárias para montar um plano BNCC perfeito (Idade, Tema, Duração, Materiais disponíveis, Interesses das crianças, etc).
+- Pergunte UMA COISA DE CADA VEZ. Nunca mande uma lista de 5 perguntas.
+- Quando você perceber que já tem informações suficientes para gerar um plano de aula completo, VOCÊ DEVE ENCERRAR A ENTREVISTA escrevendo EXATAMENTE a tag mágica: [GERAR_PLANO].
+- Exemplo de finalização: "Perfeito, prof! Já tenho tudo que preciso. [GERAR_PLANO]"
+"""
+
+class Aurora:
+    """Chatbot pedagógico usando Google Gemini com suporte a áudio."""
+
+    def __init__(self, api_key: str = ""):
+        if not api_key:
+            from dotenv import load_dotenv
+            load_dotenv()
+            api_key = os.getenv("GEMINI_API_KEY")
+            
+            if not api_key:
+                try:
+                    import streamlit as st
+                    api_key = st.secrets.get("GEMINI_API_KEY", "")
+                except Exception:
+                    pass
+
+            if not api_key:
+                raise ValueError("Chave da API não encontrada. Configure o arquivo .env ou o st.secrets")
+                
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash-latest",
+            system_instruction=SYSTEM_PROMPT,
+        )
+
+    def transcrever_audio(self, audio_bytes: bytes) -> str:
+        """Recebe bytes de áudio, envia de forma inline pro Gemini e retorna o texto transcrito."""
+        try:
+            audio_part = {
+                "mime_type": "audio/wav",
+                "data": audio_bytes
+            }
+            resp = self.model.generate_content([
+                "Transcreva exatamente o que foi dito neste áudio (em português do Brasil). Não adicione nenhum comentário seu, retorne apenas a transcrição direta.",
+                audio_part
+            ])
+            return resp.text.strip()
+        except Exception as e:
+            return f"[Erro ao transcrever áudio: {str(e)}]"
+
     def gerar_audio_resposta(self, texto: str) -> str:
-        """Gera um arquivo MP3 com a voz da Aurora a partir de um texto e retorna o caminho."""
+        """Gera um arquivo MP3 com a voz neural da Aurora a partir de um texto."""
         texto_limpo = texto.replace("[GERAR_PLANO]", "") # não fala a tag secreta
-        tts = gTTS(text=texto_limpo, lang='pt', tld='com.br', slow=False)
+        
+        async def _gerar_tts(texto_para_falar, filename):
+            communicate = edge_tts.Communicate(texto_para_falar, "pt-BR-ThalitaNeural")
+            await communicate.save(filename)
+            
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
-            tts.save(tmp.name)
+            asyncio.run(_gerar_tts(texto_limpo, tmp.name))
             return tmp.name
 
     def responder(self, mensagem: str, historico: List[Dict]) -> str:
