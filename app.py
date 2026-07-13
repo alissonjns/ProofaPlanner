@@ -735,33 +735,36 @@ def pagina_modelo():
 # ──────────────────────────────────────────────────────────────────────────────
 
 def pagina_plano_aula():
+    from audio_recorder_streamlit import audio_recorder
+    
     st.markdown("""
     <div style='margin-bottom:1.5rem;'>
         <div class='pp-hero-title'>✨ Criar Sequência Didática</div>
-        <div class='pp-hero-sub'>Converse com a Aurora 🌟 e ela montará seu plano rapidinho!</div>
+        <div class='pp-hero-sub'>Converse com a Aurora 🌟 (por texto ou áudio) e ela montará seu plano!</div>
     </div>
     """, unsafe_allow_html=True)
 
-    if "cp_step" not in st.session_state:
-        st.session_state.cp_step = 0
+    if "cp_history" not in st.session_state:
         st.session_state.cp_history = [
-            {"role": "assistant", "content": "Olá! Sou a Aurora 🌟, sua assistente pedagógica.\n\nPara qual turminha vamos criar o plano hoje? *(ex: Berçário 1, Maternal 2, Pré 1)*"}
+            {"role": "assistant", "content": "Olá, prof! Sou a Aurora 🌟, sua assistente pedagógica.\n\nPara qual turminha vamos planejar hoje? E qual será o tema da nossa aula?"}
         ]
-        st.session_state.cp_data = {}
         st.session_state.cp_plano = None
 
     # Render History
     for msg in st.session_state.cp_history:
         with st.chat_message(msg["role"], avatar="🌟" if msg["role"] == "assistant" else "👤"):
             st.markdown(msg["content"])
+            if "audio" in msg and msg["audio"]:
+                # Play generated audio
+                st.audio(msg["audio"], format="audio/mp3", autoplay=msg.get("autoplay", False))
 
     # Finished state: Show generated plan and downloads
-    if st.session_state.cp_step == 4 and st.session_state.cp_plano:
+    if st.session_state.cp_plano:
         pg = st.session_state.cp_plano
-        tema = st.session_state.cp_data.get("tema", "")
-        turma = st.session_state.cp_data.get("turma", "")
-        duracao = st.session_state.cp_data.get("duracao", "")
-        objs = st.session_state.cp_data.get("objs", [])
+        tema = pg.get("tema", "Tema")
+        turma = pg.get("turma", "Educação Infantil")
+        duracao = pg.get("duracao", "1 aula")
+        objs = pg.get("objetivos_bncc", [])
 
         st.markdown("<div class='pp-divider'></div>", unsafe_allow_html=True)
         st.markdown("<div class='pp-section-title'>🧩 Resumo do Plano Gerado</div>", unsafe_allow_html=True)
@@ -821,73 +824,73 @@ def pagina_plano_aula():
             )
         with c_reset:
             if st.button("🔄 Criar Outro", use_container_width=True):
-                del st.session_state.cp_step
+                del st.session_state.cp_history
+                del st.session_state.cp_plano
                 st.rerun()
 
-    # Trigger LLM Generation
-    elif st.session_state.cp_step == 3:
-        with st.chat_message("assistant", avatar="🌟"):
-            with st.spinner("✨ A Aurora está combinando a BNCC com o seu tema para escrever o plano. Isso leva cerca de 15 segundos..."):
-                tema = st.session_state.cp_data["tema"]
-                turma = st.session_state.cp_data["turma"]
-                duracao = st.session_state.cp_data["duracao"]
-                
-                faixa_str = "EI01" if any(x in turma.lower() for x in ["berçário", "bercario", "bebê", "bebe"]) else "EI02"
-                
-                from modules.bncc_engine import BNCCEngine
-                engine = BNCCEngine()
-                objs = engine.buscar(texto=tema, faixa=faixa_str)[:4]
-                if not objs:
-                    objs = engine.buscar(texto="brincadeira", faixa=faixa_str)[:2] # fallback se n achar nada
-                
+    # Input Chat / Audio
+    else:
+        st.markdown("<br>", unsafe_allow_html=True)
+        c_text, c_mic = st.columns([0.85, 0.15])
+        
+        texto_usuario = None
+        usou_audio = False
+        
+        with c_text:
+            prompt = st.chat_input("Digite sua resposta...")
+        with c_mic:
+            st.markdown("<div style='margin-top:2px;'>", unsafe_allow_html=True)
+            audio_bytes = audio_recorder(text="", recording_color="#EA580C", neutral_color="#CBD5E1", icon_name="microphone", icon_size="2x")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        if prompt:
+            texto_usuario = prompt
+        elif audio_bytes:
+            with st.spinner("Ouvindo..."):
                 from modules.chatbot import Aurora
                 bot = Aurora()
-                plano_gerado = bot.gerar_plano_completo(
-                    tema=tema,
-                    faixa=turma,
-                    campo="Múltiplos Campos (Integração)",
-                    objetivos=objs
-                )
+                texto_usuario = bot.transcrever_audio(audio_bytes)
+                usou_audio = True
+
+        if texto_usuario:
+            st.session_state.cp_history.append({"role": "user", "content": texto_usuario})
+            with st.chat_message("user", avatar="👤"):
+                st.markdown(texto_usuario)
                 
-                if plano_gerado:
-                    st.session_state.cp_plano = plano_gerado
-                    st.session_state.cp_step = 4
-                    st.session_state.cp_data["objs"] = objs
-                    st.session_state.cp_history.append({
-                        "role": "assistant", 
-                        "content": "Prontinho! Seu plano está gerado. Revise os detalhes abaixo e clique nos botões para baixar o documento completo."
-                    })
-                    st.rerun()
-                else:
-                    st.error("Ops, deu um erro ao falar com a IA. Tente novamente.")
-                    if st.button("Tentar Novamente"):
+            with st.chat_message("assistant", avatar="🌟"):
+                with st.spinner("Aurora está pensando..."):
+                    from modules.chatbot import Aurora
+                    bot = Aurora()
+                    resposta_bruta = bot.responder(texto_usuario, st.session_state.cp_history)
+                    
+                    if "[GERAR_PLANO]" in resposta_bruta:
+                        resposta_limpa = resposta_bruta.replace("[GERAR_PLANO]", "").strip()
+                        if resposta_limpa:
+                            st.markdown(resposta_limpa)
+                            st.session_state.cp_history.append({"role": "assistant", "content": resposta_limpa})
+                            
+                        with st.spinner("✨ Gerando o documento oficial da BNCC..."):
+                            plano_json = bot.gerar_plano_do_chat(st.session_state.cp_history)
+                            if plano_json:
+                                st.session_state.cp_plano = plano_json
+                                msg_fim = "Prontinho! Seu plano está gerado. Revise os detalhes abaixo e baixe o arquivo."
+                                st.session_state.cp_history.append({"role": "assistant", "content": msg_fim})
+                                st.rerun()
+                            else:
+                                st.error("Houve um erro ao gerar. Tente conversar mais um pouco.")
+                    else:
+                        st.markdown(resposta_bruta)
+                        audio_path = None
+                        if usou_audio:
+                            audio_path = bot.gerar_audio_resposta(resposta_bruta)
+                            
+                        st.session_state.cp_history.append({
+                            "role": "assistant", 
+                            "content": resposta_bruta, 
+                            "audio": audio_path, 
+                            "autoplay": usou_audio
+                        })
                         st.rerun()
-
-    # Input Chat
-    elif prompt := st.chat_input("Digite sua resposta..."):
-        st.session_state.cp_history.append({"role": "user", "content": prompt})
-        
-        step = st.session_state.cp_step
-        if step == 0:
-            st.session_state.cp_data["turma"] = prompt
-            st.session_state.cp_step = 1
-            reply = f"Ótimo! Turminha do **{prompt}**. E qual será o tema ou a principal atividade dessa sequência? *(ex: Brincadeira com tintas, O ciclo da semente)*"
-            st.session_state.cp_history.append({"role": "assistant", "content": reply})
-            st.rerun()
-            
-        elif step == 1:
-            st.session_state.cp_data["tema"] = prompt
-            st.session_state.cp_step = 2
-            reply = f"Perfeito! O tema será **{prompt}**. Qual a duração aproximada para esse planejamento? *(ex: Uma aula, 3 dias, 1 semana)*"
-            st.session_state.cp_history.append({"role": "assistant", "content": reply})
-            st.rerun()
-
-        elif step == 2:
-            st.session_state.cp_data["duracao"] = prompt
-            st.session_state.cp_step = 3
-            reply = "Entendido! Estou buscando os melhores objetivos da BNCC e redigindo o seu plano agora mesmo. Aguarde um instante..."
-            st.session_state.cp_history.append({"role": "assistant", "content": reply})
-            st.rerun()
 
 
 

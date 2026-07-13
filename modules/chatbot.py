@@ -1,5 +1,8 @@
 import google.generativeai as genai
 from typing import List, Dict
+import os
+import tempfile
+from gtts import gTTS
 
 SYSTEM_PROMPT = """
 Você é a Aurora 🌟, uma assistente pedagógica especializada em Educação Infantil
@@ -33,19 +36,26 @@ REGRAS DE COMPORTAMENTO ESTritas (IMPORTANTE)
 4. FOCO ABSOLUTO EM PEDAGOGIA: Você foi criada EXCLUSIVAMENTE para falar sobre BNCC, planejamento pedagógico, atividades infantis e uso do ProfaPlanner. 
 5. PROIBIÇÃO DE ASSUNTOS ALEATÓRIOS: Se a usuária perguntar sobre qualquer tema fora do contexto escolar/pedagógico (ex: "quem nasceu primeiro, o ovo ou a galinha?", política, receitas não-pedagógicas, programação, etc.), VOCÊ DEVE RECUSAR GENTILMENTE.
    - Exemplo de recusa: "Desculpe, prof, mas meu foco é te ajudar com os planejamentos pedagógicos e a BNCC! Sobre que tema vamos montar nossa próxima aula?"
+
+═══════════════════════════════════════════════
+MODO ENTREVISTA (CRIAÇÃO DE PLANO DE AULA)
+═══════════════════════════════════════════════
+Se você estiver conduzindo uma entrevista para criar um plano de aula:
+- Você DEVE fazer as perguntas necessárias para montar um plano BNCC perfeito (Idade, Tema, Duração, Materiais disponíveis, Interesses das crianças, etc).
+- Pergunte UMA COISA DE CADA VEZ. Nunca mande uma lista de 5 perguntas.
+- Quando você perceber que já tem informações suficientes para gerar um plano de aula completo, VOCÊ DEVE ENCERRAR A ENTREVISTA escrevendo EXATAMENTE a tag mágica: [GERAR_PLANO].
+- Exemplo de finalização: "Perfeito, prof! Já tenho tudo que preciso. [GERAR_PLANO]"
 """
 
 class Aurora:
-    """Chatbot pedagógico usando Google Gemini."""
+    """Chatbot pedagógico usando Google Gemini com suporte a áudio."""
 
     def __init__(self, api_key: str = ""):
         if not api_key:
-            import os
             from dotenv import load_dotenv
             load_dotenv()
             api_key = os.getenv("GEMINI_API_KEY")
             
-            # Se não achou no .env, tenta buscar no st.secrets (para rodar na nuvem)
             if not api_key:
                 try:
                     import streamlit as st
@@ -58,9 +68,41 @@ class Aurora:
                 
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel(
-            model_name="gemini-flash-latest",
+            model_name="gemini-1.5-flash",
             system_instruction=SYSTEM_PROMPT,
         )
+
+    def transcrever_audio(self, audio_bytes: bytes) -> str:
+        """Recebe bytes de áudio, salva temp, envia pro Gemini e retorna o texto transcrito."""
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+                tmp.write(audio_bytes)
+                tmp_path = tmp.name
+
+            # Fazer upload para a API do Gemini
+            audio_file = genai.upload_file(path=tmp_path)
+            
+            # Pedir para transcrever
+            resp = self.model.generate_content([
+                "Transcreva exatamente o que foi dito neste áudio (em português do Brasil). Não adicione nenhum comentário seu, retorne apenas a transcrição direta.",
+                audio_file
+            ])
+            
+            # Limpar
+            genai.delete_file(audio_file.name)
+            os.remove(tmp_path)
+            
+            return resp.text.strip()
+        except Exception as e:
+            return f"[Erro ao transcrever áudio: {str(e)}]"
+
+    def gerar_audio_resposta(self, texto: str) -> str:
+        """Gera um arquivo MP3 com a voz da Aurora a partir de um texto e retorna o caminho."""
+        texto_limpo = texto.replace("[GERAR_PLANO]", "") # não fala a tag secreta
+        tts = gTTS(text=texto_limpo, lang='pt', tld='com.br', slow=False)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
+            tts.save(tmp.name)
+            return tmp.name
 
     def responder(self, mensagem: str, historico: List[Dict]) -> str:
         """Envia uma mensagem e retorna a resposta do bot."""
@@ -125,4 +167,51 @@ Retorne APENAS um JSON válido com a seguinte estrutura (sem markdown extra, sem
             return json.loads(texto)
         except Exception as e:
             print(f"Erro na geração do plano: {e}")
+            return None
+
+    def gerar_plano_do_chat(self, historico: List[Dict]) -> dict:
+        """Gera um plano completo no formato JSON analisando a entrevista dinâmica realizada."""
+        
+        chat_texto = ""
+        for msg in historico:
+            papel = "Professor(a)" if msg["role"] == "user" else "Aurora"
+            chat_texto += f"{papel}: {msg['content']}\n"
+            
+        prompt = f"""
+Você é uma especialista em pedagogia da Educação Infantil. 
+Baseado EXCLUSIVAMENTE na entrevista abaixo conduzida entre a Aurora e a Professor(a), extraia as informações e escreva o conteúdo de um plano de aula completo seguindo as diretrizes da BNCC.
+
+HISTÓRICO DA ENTREVISTA:
+{chat_texto}
+
+INSTRUÇÕES:
+- Você deve definir e escolher os Códigos e Objetivos BNCC mais adequados baseados no que foi discutido.
+- Se algum campo não foi discutido (ex: duração), assuma um padrão razoável para a Educação Infantil (ex: 1 aula).
+
+Retorne APENAS um JSON válido com a seguinte estrutura (sem markdown extra, sem ```json, apenas as chaves e valores):
+{{
+    "tema": "Tema central extraído do chat",
+    "turma": "Turma/Faixa etária discutida",
+    "duracao": "Duração extraída",
+    "objetivos_bncc": [
+        {{"codigo": "EI02...", "descricao": "Descrição do objetivo escolhido por você..."}}
+    ],
+    "justificativa": "Texto explicando a importância pedagógica...",
+    "obj_geral": "O objetivo geral formatado de forma clara...",
+    "atividades": [
+        {{"nome": "Nome criativo da atividade 1", "descricao": "Passo a passo bem detalhado da atividade 1..."}}
+    ],
+    "avaliacao": "Como o aprendizado será observado e registrado..."
+}}
+"""
+        try:
+            resp = self.model.generate_content(prompt)
+            texto = resp.text.strip()
+            if texto.startswith("```json"):
+                texto = texto.replace("```json", "").replace("```", "").strip()
+            
+            import json
+            return json.loads(texto)
+        except Exception as e:
+            print(f"Erro na geração do plano pelo chat: {e}")
             return None
