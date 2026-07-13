@@ -1235,8 +1235,8 @@ def pagina_alunos():
         c_down, c_up = st.columns(2)
         with c_down:
             with st.container(border=True):
-                st.markdown('<div style="color:#065F46; font-weight:700; margin-bottom:0.3rem;">⬇️ Exportar (Backup)</div>', unsafe_allow_html=True)
-                st.markdown('<div style="color:#059669; font-size:0.85rem; margin-bottom:1rem;">Baixe a planilha com todos os alunos e avaliações. Guarde este arquivo em segurança.</div>', unsafe_allow_html=True)
+                st.markdown('<div style="color:#1E293B; font-weight:700; margin-bottom:0.3rem;">⬇️ Exportar (Backup)</div>', unsafe_allow_html=True)
+                st.markdown('<div style="color:#475569; font-size:0.85rem; margin-bottom:1rem;">Baixe a planilha com todos os alunos e avaliações. Guarde este arquivo em segurança.</div>', unsafe_allow_html=True)
                 try:
                     excel_bytes = db.exportar_alunos_excel()
                     st.download_button(
@@ -1251,8 +1251,8 @@ def pagina_alunos():
                 
         with c_up:
             with st.container(border=True):
-                st.markdown('<div style="color:#1D4ED8; font-weight:700; margin-bottom:0.3rem;">⬆️ Importar (Restauração)</div>', unsafe_allow_html=True)
-                st.markdown('<div style="color:#2563EB; font-size:0.85rem; margin-bottom:0.5rem;">Faça o upload de uma planilha de backup baixada anteriormente.</div>', unsafe_allow_html=True)
+                st.markdown('<div style="color:#1E293B; font-weight:700; margin-bottom:0.3rem;">⬆️ Importar (Restauração)</div>', unsafe_allow_html=True)
+                st.markdown('<div style="color:#475569; font-size:0.85rem; margin-bottom:0.5rem;">Faça o upload de uma planilha de backup baixada anteriormente.</div>', unsafe_allow_html=True)
                 uploaded_file = st.file_uploader("Arquivo Excel", type=["xlsx"], label_visibility="collapsed")
                 if uploaded_file is not None:
                     if st.button("Restaurar Turma", type="primary", use_container_width=True):
