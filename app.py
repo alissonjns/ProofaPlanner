@@ -1124,7 +1124,7 @@ def pagina_alunos():
     db = BancoDados()
     alunos_db = db.get_alunos()
 
-    tab1, tab2 = st.tabs(["📋  Minha Turma", "📊  Registro de Desenvolvimento"])
+    tab1, tab2, tab3 = st.tabs(["📋  Minha Turma", "📊  Registro de Desenvolvimento", "💾 Backup / Restauração"])
 
     with tab1:
         st.markdown("**Adicionar aluno à turma:**")
@@ -1229,6 +1229,43 @@ def pagina_alunos():
                 data=doc_bytes, file_name=nome_arquivo,
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 use_container_width=True)
+
+    with tab3:
+        st.markdown('<div style="font-weight:700; color:#0F172A; font-size:1.1rem; margin-bottom:0.5rem;">💾 Backup / Restauração da Turma Inteira</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:#475569; font-size:0.9rem; margin-bottom:1rem;">Use esta aba para baixar os dados da sua turma atual ou restaurar uma turma salva anteriormente. Ideal para manter seus dados seguros ou se estiver usando outro computador.</div>', unsafe_allow_html=True)
+        
+        c_down, c_up = st.columns(2)
+        with c_down:
+            st.markdown('<div class="pp-card-verde" style="padding:1rem;">', unsafe_allow_html=True)
+            st.markdown('<div style="color:#065F46; font-weight:700; margin-bottom:0.3rem;">⬇️ Exportar (Backup)</div>', unsafe_allow_html=True)
+            st.markdown('<div style="color:#059669; font-size:0.85rem; margin-bottom:1rem;">Baixe a planilha com todos os alunos e avaliações. Guarde este arquivo em segurança.</div>', unsafe_allow_html=True)
+            try:
+                excel_bytes = db.exportar_alunos_excel()
+                st.download_button(
+                    label="Baixar Turma para Excel",
+                    data=excel_bytes,
+                    file_name="Meus_Alunos_ProfaPlanner.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True
+                )
+            except Exception as e:
+                st.error(f"Erro ao gerar backup: {e}")
+            st.markdown('</div>', unsafe_allow_html=True)
+                
+        with c_up:
+            st.markdown('<div class="pp-card-azul" style="padding:1rem;">', unsafe_allow_html=True)
+            st.markdown('<div style="color:#1D4ED8; font-weight:700; margin-bottom:0.3rem;">⬆️ Importar (Restauração)</div>', unsafe_allow_html=True)
+            st.markdown('<div style="color:#2563EB; font-size:0.85rem; margin-bottom:0.5rem;">Faça o upload de uma planilha de backup baixada anteriormente.</div>', unsafe_allow_html=True)
+            uploaded_file = st.file_uploader("Arquivo Excel", type=["xlsx"], label_visibility="collapsed")
+            if uploaded_file is not None:
+                if st.button("Restaurar Turma", type="primary", use_container_width=True):
+                    try:
+                        db.importar_alunos_excel(uploaded_file.read())
+                        st.success("✅ Turma restaurada com sucesso!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Erro ao importar. Certifique-se que o arquivo é válido. Detalhes: {e}")
+            st.markdown('</div>', unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────────────────────────────────────
 

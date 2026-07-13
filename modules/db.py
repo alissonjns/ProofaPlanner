@@ -66,3 +66,55 @@ class BancoDados:
                 (json.dumps(evolucao), aluno_id)
             )
             conn.commit()
+
+    def exportar_alunos_excel(self) -> bytes:
+        import pandas as pd
+        import io
+        
+        alunos = self.get_alunos()
+        data = []
+        for a in alunos:
+            data.append({
+                "Nome": a["nome"],
+                "Faixa": a["faixa"],
+                "Evolucao_JSON": json.dumps(a["evolucao"], ensure_ascii=False)
+            })
+            
+        df = pd.DataFrame(data)
+        
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Alunos')
+            
+        buffer.seek(0)
+        return buffer.getvalue()
+
+    def importar_alunos_excel(self, file_bytes: bytes):
+        import pandas as pd
+        import io
+        
+        buffer = io.BytesIO(file_bytes)
+        df = pd.read_excel(buffer)
+        
+        existing_alunos = {a["nome"]: a for a in self.get_alunos()}
+        
+        for _, row in df.iterrows():
+            nome = str(row.get("Nome", "")).strip()
+            if not nome or nome == "nan":
+                continue
+                
+            faixa = str(row.get("Faixa", "EI01")).strip()
+            evolucao_json = row.get("Evolucao_JSON", "{}")
+            
+            try:
+                evolucao = json.loads(evolucao_json) if isinstance(evolucao_json, str) else {}
+            except json.JSONDecodeError:
+                evolucao = {}
+                
+            if nome in existing_alunos:
+                aluno_id = existing_alunos[nome]["id"]
+                # Optionally we could update faixa as well, but for now we just update evolucao
+                self.update_evolucao(aluno_id, evolucao)
+            else:
+                aluno_id = self.add_aluno(nome, faixa)
+                self.update_evolucao(aluno_id, evolucao)
