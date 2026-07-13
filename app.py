@@ -838,23 +838,28 @@ def pagina_plano_aula():
     # Input Chat / Audio
     else:
         st.markdown("<br>", unsafe_allow_html=True)
+        c_text, c_mic = st.columns([0.85, 0.15])
         
         texto_usuario = None
         usou_audio = False
         
-        # O chat_input nativo do Streamlit (texto)
-        prompt = st.chat_input("Digite sua resposta...")
-        
-        # O audio_input nativo do Streamlit 1.40+
-        audio_file = st.audio_input("🎤 Gravar mensagem de voz")
+        with c_text:
+            prompt = st.chat_input("Digite sua resposta...")
+        with c_mic:
+            st.markdown("<div style='margin-top:2px;'>", unsafe_allow_html=True)
+            from audio_recorder_streamlit import audio_recorder
+            # Estilo limpo e minimalista para agradar o usuário
+            audio_bytes = audio_recorder(text="", icon_name="microphone", icon_size="2x", recording_color="#e84118", neutral_color="#94A3B8")
+            st.markdown("</div>", unsafe_allow_html=True)
 
         if prompt:
             texto_usuario = prompt
-        elif audio_file:
-            audio_bytes = audio_file.getvalue()
-            # Anti-loop infinito: só processar se for um áudio novo
-            if st.session_state.get("last_audio_hash") != hash(audio_bytes):
-                st.session_state["last_audio_hash"] = hash(audio_bytes)
+        elif audio_bytes:
+            import hashlib
+            audio_md5 = hashlib.md5(audio_bytes).hexdigest()
+            # Anti-loop infinito: só processar se for um áudio novo (md5 diferente)
+            if st.session_state.get("last_audio_hash") != audio_md5:
+                st.session_state["last_audio_hash"] = audio_md5
                 with st.spinner("Ouvindo..."):
                     from modules.chatbot import Aurora
                     bot = Aurora()
