@@ -230,9 +230,11 @@ p { color: #1E293B !important; }
     border-radius: 12px !important;
     padding: 1.5rem !important;
 }
-/* Esconder o botãozinho interno para não parecer "duas caixas" */
 [data-testid="stFileUploaderDropzone"] button {
-    display: none !important;
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 8px !important;
 }
 [data-testid="stFileUploader"] {
     color: #1E293B !important;
@@ -424,8 +426,10 @@ p { color: #1E293B !important; }
 """, unsafe_allow_html=True)
 
 # ─── Session State ────────────────────────────────────────────────────────────
+_is_dev = st.query_params.get("dev", "").lower() == "true"
+
 _def = {
-    "pagina": "boas_vindas",   # começa no tour obrigatório
+    "pagina": "inicio" if _is_dev else "boas_vindas",   # começa no tour obrigatório (exceto se dev=true)
     "tour_step": 1,
     "alunos": [],
     "historico_chat": [],
