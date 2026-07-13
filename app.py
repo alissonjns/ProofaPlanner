@@ -755,9 +755,15 @@ def pagina_plano_aula():
         with st.chat_message(msg["role"], avatar="🌟" if msg["role"] == "assistant" else "👤"):
             st.markdown(msg["content"])
             if "audio" in msg and msg["audio"]:
-                # Play generated audio (only autoplay the very last one)
-                auto = msg.get("autoplay", False) if i == len(st.session_state.cp_history) - 1 else False
-                st.audio(msg["audio"], format="audio/mp3", autoplay=auto, key=f"chat_audio_{i}")
+                # Toca via HTML para não dar conflito de versão do Streamlit
+                try:
+                    import base64
+                    with open(msg["audio"], "rb") as f:
+                        b64 = base64.b64encode(f.read()).decode()
+                    auto = "autoplay" if (i == len(st.session_state.cp_history) - 1 and msg.get("autoplay", False)) else ""
+                    st.markdown(f'<audio src="data:audio/mp3;base64,{b64}" controls {auto} style="height:35px; width:100%; max-width:300px; margin-top:10px;"></audio>', unsafe_allow_html=True)
+                except Exception:
+                    pass
 
     # Finished state: Show generated plan and downloads
     if st.session_state.cp_plano:
@@ -840,8 +846,8 @@ def pagina_plano_aula():
         with c_text:
             prompt = st.chat_input("Digite sua resposta...")
         with c_mic:
-            st.markdown("<div style='margin-top:2px;'>", unsafe_allow_html=True)
-            audio_bytes = audio_recorder(text="", recording_color="#EF4444", neutral_color="#94A3B8", icon_name="microphone", icon_size="2x")
+            st.markdown("<div style='margin-top:2px; text-align:center;'>", unsafe_allow_html=True)
+            audio_bytes = audio_recorder(text="🎙️ Falar", recording_color="#e84118", neutral_color="#dcdde1", icon_name="microphone", icon_size="1x")
             st.markdown("</div>", unsafe_allow_html=True)
 
         if prompt:
