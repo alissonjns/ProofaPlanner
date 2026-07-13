@@ -225,13 +225,14 @@ p { color: #1E293B !important; }
 
 /* ── File Uploader ── */
 [data-testid="stFileUploaderDropzone"] {
-    background-color: #FFFFFF !important;
-    border: 1px dashed #e2e8f0 !important;
+    background-color: #F8FAFC !important;
+    border: 2px dashed #CBD5E1 !important;
+    border-radius: 12px !important;
+    padding: 1.5rem !important;
 }
+/* Esconder o botãozinho interno para não parecer "duas caixas" */
 [data-testid="stFileUploaderDropzone"] button {
-    background-color: #FFFFFF !important;
-    color: #0f172a !important;
-    border: 1px solid #cbd5e1 !important;
+    display: none !important;
 }
 [data-testid="stFileUploader"] {
     color: #1E293B !important;
