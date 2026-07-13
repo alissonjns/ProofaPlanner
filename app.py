@@ -735,7 +735,7 @@ def pagina_modelo():
 # ──────────────────────────────────────────────────────────────────────────────
 
 def pagina_plano_aula():
-    from audio_recorder_streamlit import audio_recorder
+    import tempfile
     
     st.markdown("""
     <div style='margin-bottom:1.5rem;'>
@@ -838,26 +838,28 @@ def pagina_plano_aula():
     # Input Chat / Audio
     else:
         st.markdown("<br>", unsafe_allow_html=True)
-        c_text, c_mic = st.columns([0.85, 0.15])
         
         texto_usuario = None
         usou_audio = False
         
-        with c_text:
-            prompt = st.chat_input("Digite sua resposta...")
-        with c_mic:
-            st.markdown("<div style='margin-top:2px; text-align:center;'>", unsafe_allow_html=True)
-            audio_bytes = audio_recorder(text="🎙️ Falar", recording_color="#e84118", neutral_color="#dcdde1", icon_name="microphone", icon_size="1x")
-            st.markdown("</div>", unsafe_allow_html=True)
+        # O chat_input nativo do Streamlit (texto)
+        prompt = st.chat_input("Digite sua resposta...")
+        
+        # O audio_input nativo do Streamlit 1.40+
+        audio_file = st.audio_input("🎤 Gravar mensagem de voz")
 
         if prompt:
             texto_usuario = prompt
-        elif audio_bytes:
-            with st.spinner("Ouvindo..."):
-                from modules.chatbot import Aurora
-                bot = Aurora()
-                texto_usuario = bot.transcrever_audio(audio_bytes)
-                usou_audio = True
+        elif audio_file:
+            audio_bytes = audio_file.getvalue()
+            # Anti-loop infinito: só processar se for um áudio novo
+            if st.session_state.get("last_audio_hash") != hash(audio_bytes):
+                st.session_state["last_audio_hash"] = hash(audio_bytes)
+                with st.spinner("Ouvindo..."):
+                    from modules.chatbot import Aurora
+                    bot = Aurora()
+                    texto_usuario = bot.transcrever_audio(audio_bytes)
+                    usou_audio = True
 
         if texto_usuario:
             st.session_state.cp_history.append({"role": "user", "content": texto_usuario})
