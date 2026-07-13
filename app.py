@@ -751,12 +751,13 @@ def pagina_plano_aula():
         st.session_state.cp_plano = None
 
     # Render History
-    for msg in st.session_state.cp_history:
+    for i, msg in enumerate(st.session_state.cp_history):
         with st.chat_message(msg["role"], avatar="🌟" if msg["role"] == "assistant" else "👤"):
             st.markdown(msg["content"])
             if "audio" in msg and msg["audio"]:
-                # Play generated audio
-                st.audio(msg["audio"], format="audio/mp3", autoplay=msg.get("autoplay", False))
+                # Play generated audio (only autoplay the very last one)
+                auto = msg.get("autoplay", False) if i == len(st.session_state.cp_history) - 1 else False
+                st.audio(msg["audio"], format="audio/mp3", autoplay=auto, key=f"chat_audio_{i}")
 
     # Finished state: Show generated plan and downloads
     if st.session_state.cp_plano:
@@ -840,7 +841,7 @@ def pagina_plano_aula():
             prompt = st.chat_input("Digite sua resposta...")
         with c_mic:
             st.markdown("<div style='margin-top:2px;'>", unsafe_allow_html=True)
-            audio_bytes = audio_recorder(text="", icon_name="microphone", icon_size="2x")
+            audio_bytes = audio_recorder(text="", recording_color="#EF4444", neutral_color="#94A3B8", icon_name="microphone", icon_size="2x")
             st.markdown("</div>", unsafe_allow_html=True)
 
         if prompt:
