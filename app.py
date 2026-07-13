@@ -746,7 +746,7 @@ def pagina_plano_aula():
 
     if "cp_history" not in st.session_state:
         st.session_state.cp_history = [
-            {"role": "assistant", "content": "Olá, prof! Sou a Aurora 🌟, sua assistente pedagógica.\n\nPara qual turminha vamos planejar hoje? E qual será o tema da nossa aula?"}
+            {"role": "assistant", "content": "Olá, prof! Sou a Aurora 🌟, sua assistente de criação pedagógica.\n\nPara começarmos bem o nosso planejamento de hoje, como devo chamá-la?"}
         ]
         st.session_state.cp_plano = None
 
