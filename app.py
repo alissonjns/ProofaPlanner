@@ -1179,56 +1179,54 @@ def pagina_alunos():
     with tab2:
         if not alunos_db:
             st.info("Cadastre os alunos na aba **Minha Turma** primeiro.")
-            return
+        else:
+            aluno_nome = st.selectbox("Qual criança você quer avaliar?",
+                                      [a["nome"] for a in alunos_db])
+            aluno = next(a for a in alunos_db if a["nome"] == aluno_nome)
 
-        aluno_nome = st.selectbox("Qual criança você quer avaliar?",
-                                  [a["nome"] for a in alunos_db])
-        aluno = next(a for a in alunos_db if a["nome"] == aluno_nome)
+            _status_opts = {"A": "✅ Já consegue fazer", "D": "🔄 Está aprendendo", "N": "⏳ Ainda não iniciou"}
 
-        _status_opts = {"A": "✅ Já consegue fazer", "D": "🔄 Está aprendendo", "N": "⏳ Ainda não iniciou"}
+            st.markdown(
+                f'<div style="color:#64748B; font-size:0.85rem; margin:0.5rem 0 1rem;">'
+                f"Para cada habilidade abaixo, marque como <strong style='color:#1E293B;'>{aluno_nome}</strong> está:</div>",
+                unsafe_allow_html=True)
 
-        st.markdown(
-            f'<div style="color:#64748B; font-size:0.85rem; margin:0.5rem 0 1rem;">'
-            f"Para cada habilidade abaixo, marque como <strong style='color:#1E293B;'>{aluno_nome}</strong> está:</div>",
-            unsafe_allow_html=True)
+            for campo_nome, objetivos in engine.get_objetivos_por_faixa(aluno["faixa"]).items():
+                n_at = sum(1 for o in objetivos if aluno["evolucao"].get(o["codigo"]) == "A")
+                with st.expander(f"{campo_nome} — {n_at}/{len(objetivos)} conquistados", icon="📌"):
+                    for obj in objetivos:
+                        c_desc, c_st = st.columns([4, 1.4])
+                        with c_desc:
+                            st.markdown(
+                                f'<span class="badge-bncc">{obj["codigo"]}</span>'
+                                f'<span style="color:#334155; font-size:0.85rem; margin-left:6px;">{obj["descricao"]}</span>',
+                                unsafe_allow_html=True)
+                        with c_st:
+                            status = aluno["evolucao"].get(obj["codigo"], "N")
+                            novo = st.selectbox("s", list(_status_opts.keys()),
+                                                format_func=lambda x: _status_opts[x],
+                                                index=list(_status_opts.keys()).index(status),
+                                                key=f"st_{aluno_nome}_{obj['codigo']}",
+                                                label_visibility="collapsed")
+                            
+                            if novo != status:
+                                evolucao_atual = aluno["evolucao"].copy()
+                                evolucao_atual[obj["codigo"]] = novo
+                                db.update_evolucao(aluno["id"], evolucao_atual)
+                                st.rerun()
+                        st.divider()
 
-        for campo_nome, objetivos in engine.get_objetivos_por_faixa(aluno["faixa"]).items():
-            n_at = sum(1 for o in objetivos if aluno["evolucao"].get(o["codigo"]) == "A")
-            # Correção do translate quebrando o expander: evitamos emoji no título se possivel, ou usamos icon nativo (Streamlit 1.35+)
-            with st.expander(f"{campo_nome} — {n_at}/{len(objetivos)} conquistados", icon="📌"):
-                for obj in objetivos:
-                    c_desc, c_st = st.columns([4, 1.4])
-                    with c_desc:
-                        st.markdown(
-                            f'<span class="badge-bncc">{obj["codigo"]}</span>'
-                            f'<span style="color:#334155; font-size:0.85rem; margin-left:6px;">{obj["descricao"]}</span>',
-                            unsafe_allow_html=True)
-                    with c_st:
-                        status = aluno["evolucao"].get(obj["codigo"], "N")
-                        novo = st.selectbox("s", list(_status_opts.keys()),
-                                            format_func=lambda x: _status_opts[x],
-                                            index=list(_status_opts.keys()).index(status),
-                                            key=f"st_{aluno_nome}_{obj['codigo']}",
-                                            label_visibility="collapsed")
-                        
-                        if novo != status:
-                            evolucao_atual = aluno["evolucao"].copy()
-                            evolucao_atual[obj["codigo"]] = novo
-                            db.update_evolucao(aluno["id"], evolucao_atual)
-                            st.rerun()
-                    st.divider()
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("⬇️  Gerar Relatório Bimestral desta criança",
-                     type="primary", use_container_width=True):
-            with st.spinner(f"Gerando relatório de {aluno_nome}..."):
-                doc_bytes = Exportador().gerar_relatorio_aluno(aluno, engine)
-            nome_arquivo = f"relatorio_{aluno_nome.replace(' ', '_').lower()}.docx"
-            st.download_button(
-                label=f"📄  Baixar Relatório de {aluno_nome}",
-                data=doc_bytes, file_name=nome_arquivo,
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                use_container_width=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("⬇️  Gerar Relatório Bimestral desta criança",
+                         type="primary", use_container_width=True):
+                with st.spinner(f"Gerando relatório de {aluno_nome}..."):
+                    doc_bytes = Exportador().gerar_relatorio_aluno(aluno, engine)
+                nome_arquivo = f"relatorio_{aluno_nome.replace(' ', '_').lower()}.docx"
+                st.download_button(
+                    label=f"📄  Baixar Relatório de {aluno_nome}",
+                    data=doc_bytes, file_name=nome_arquivo,
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    use_container_width=True)
 
     with tab3:
         st.markdown('<div style="font-weight:700; color:#0F172A; font-size:1.1rem; margin-bottom:0.5rem;">💾 Backup / Restauração da Turma Inteira</div>', unsafe_allow_html=True)
@@ -1236,36 +1234,34 @@ def pagina_alunos():
         
         c_down, c_up = st.columns(2)
         with c_down:
-            st.markdown('<div class="pp-card-verde" style="padding:1rem;">', unsafe_allow_html=True)
-            st.markdown('<div style="color:#065F46; font-weight:700; margin-bottom:0.3rem;">⬇️ Exportar (Backup)</div>', unsafe_allow_html=True)
-            st.markdown('<div style="color:#059669; font-size:0.85rem; margin-bottom:1rem;">Baixe a planilha com todos os alunos e avaliações. Guarde este arquivo em segurança.</div>', unsafe_allow_html=True)
-            try:
-                excel_bytes = db.exportar_alunos_excel()
-                st.download_button(
-                    label="Baixar Turma para Excel",
-                    data=excel_bytes,
-                    file_name="Meus_Alunos_ProfaPlanner.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True
-                )
-            except Exception as e:
-                st.error(f"Erro ao gerar backup: {e}")
-            st.markdown('</div>', unsafe_allow_html=True)
+            with st.container(border=True):
+                st.markdown('<div style="color:#065F46; font-weight:700; margin-bottom:0.3rem;">⬇️ Exportar (Backup)</div>', unsafe_allow_html=True)
+                st.markdown('<div style="color:#059669; font-size:0.85rem; margin-bottom:1rem;">Baixe a planilha com todos os alunos e avaliações. Guarde este arquivo em segurança.</div>', unsafe_allow_html=True)
+                try:
+                    excel_bytes = db.exportar_alunos_excel()
+                    st.download_button(
+                        label="Baixar Turma para Excel",
+                        data=excel_bytes,
+                        file_name="Meus_Alunos_ProfaPlanner.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True
+                    )
+                except Exception as e:
+                    st.error(f"Erro ao gerar backup: {e}")
                 
         with c_up:
-            st.markdown('<div class="pp-card-azul" style="padding:1rem;">', unsafe_allow_html=True)
-            st.markdown('<div style="color:#1D4ED8; font-weight:700; margin-bottom:0.3rem;">⬆️ Importar (Restauração)</div>', unsafe_allow_html=True)
-            st.markdown('<div style="color:#2563EB; font-size:0.85rem; margin-bottom:0.5rem;">Faça o upload de uma planilha de backup baixada anteriormente.</div>', unsafe_allow_html=True)
-            uploaded_file = st.file_uploader("Arquivo Excel", type=["xlsx"], label_visibility="collapsed")
-            if uploaded_file is not None:
-                if st.button("Restaurar Turma", type="primary", use_container_width=True):
-                    try:
-                        db.importar_alunos_excel(uploaded_file.read())
-                        st.success("✅ Turma restaurada com sucesso!")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Erro ao importar. Certifique-se que o arquivo é válido. Detalhes: {e}")
-            st.markdown('</div>', unsafe_allow_html=True)
+            with st.container(border=True):
+                st.markdown('<div style="color:#1D4ED8; font-weight:700; margin-bottom:0.3rem;">⬆️ Importar (Restauração)</div>', unsafe_allow_html=True)
+                st.markdown('<div style="color:#2563EB; font-size:0.85rem; margin-bottom:0.5rem;">Faça o upload de uma planilha de backup baixada anteriormente.</div>', unsafe_allow_html=True)
+                uploaded_file = st.file_uploader("Arquivo Excel", type=["xlsx"], label_visibility="collapsed")
+                if uploaded_file is not None:
+                    if st.button("Restaurar Turma", type="primary", use_container_width=True):
+                        try:
+                            db.importar_alunos_excel(uploaded_file.read())
+                            st.success("✅ Turma restaurada com sucesso!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Erro ao importar. Certifique-se que o arquivo é válido. Detalhes: {e}")
 
 # ──────────────────────────────────────────────────────────────────────────────
 
