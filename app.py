@@ -844,77 +844,53 @@ def pagina_plano_aula():
                 del st.session_state.cp_plano
                 st.rerun()
 
-    # Input Chat / Audio
-    else:
-        st.markdown("<br>", unsafe_allow_html=True)
-        # O microfone foi desativado temporariamente para poupar tokens
-        # c_text, c_mic = st.columns([0.85, 0.15])
-        
-        texto_usuario = None
-        usou_audio = False
-        
-        # with c_text:
-        prompt = st.chat_input("Digite sua resposta...")
-        
-        # with c_mic:
-        #     st.markdown("<div style='margin-top:2px;'>", unsafe_allow_html=True)
-        #     from audio_recorder_streamlit import audio_recorder
-        #     audio_bytes = audio_recorder(text="", icon_name="microphone", icon_size="2x", recording_color="#e84118", neutral_color="#94A3B8")
-        #     st.markdown("</div>", unsafe_allow_html=True)
+    # Input Chat / Audio sempre visível
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    texto_usuario = None
+    usou_audio = False
+    
+    prompt = st.chat_input("Digite sua resposta ou peça alterações no plano...")
+    if prompt:
+        texto_usuario = prompt
 
-        if prompt:
-            texto_usuario = prompt
-        # elif audio_bytes:
-        #     import hashlib
-        #     audio_md5 = hashlib.md5(audio_bytes).hexdigest()
-        #     if st.session_state.get("last_audio_hash") != audio_md5:
-        #         st.session_state["last_audio_hash"] = audio_md5
-        #         with st.spinner("Ouvindo..."):
-        #             from modules.chatbot import Aurora
-        #             bot = Aurora()
-        #             texto_usuario = bot.transcrever_audio(audio_bytes)
-        #             usou_audio = True
-
-        if texto_usuario:
-            st.session_state.cp_history.append({"role": "user", "content": texto_usuario})
-            with st.chat_message("user", avatar="👤"):
-                st.markdown(texto_usuario)
+    if texto_usuario:
+        st.session_state.cp_history.append({"role": "user", "content": texto_usuario})
+        with st.chat_message("user", avatar="👤"):
+            st.markdown(texto_usuario)
+            
+        with st.chat_message("assistant", avatar="🌟"):
+            with st.spinner("Aurora está pensando..."):
+                from modules.chatbot import Aurora
+                bot = Aurora()
+                resposta_bruta = bot.responder(texto_usuario, st.session_state.cp_history)
                 
-            with st.chat_message("assistant", avatar="🌟"):
-                with st.spinner("Aurora está pensando..."):
-                    from modules.chatbot import Aurora
-                    bot = Aurora()
-                    resposta_bruta = bot.responder(texto_usuario, st.session_state.cp_history)
-                    
-                    if "[GERAR_PLANO]" in resposta_bruta:
-                        resposta_limpa = resposta_bruta.replace("[GERAR_PLANO]", "").strip()
-                        if resposta_limpa:
-                            st.markdown(resposta_limpa)
-                            st.session_state.cp_history.append({"role": "assistant", "content": resposta_limpa})
-                            
-                        with st.spinner("✨ Gerando o documento oficial da BNCC..."):
-                            plano_json = bot.gerar_plano_do_chat(st.session_state.cp_history)
-                            if plano_json:
-                                st.session_state.cp_plano = plano_json
-                                msg_fim = "Prontinho! Seu plano está gerado. Revise os detalhes abaixo e baixe o arquivo."
-                                st.session_state.cp_history.append({"role": "assistant", "content": msg_fim})
-                                st.rerun()
-                            else:
-                                st.error("Houve um erro ao gerar. Tente conversar mais um pouco.")
-                    else:
-                        st.markdown(resposta_bruta)
-                        audio_path = None
-                        # Desativado temporariamente a pedido da usuária para economizar tokens
-                        # if usou_audio:
-                        #     audio_path = bot.gerar_audio_resposta(resposta_bruta)
+                if "[GERAR_PLANO]" in resposta_bruta:
+                    resposta_limpa = resposta_bruta.replace("[GERAR_PLANO]", "").strip()
+                    if resposta_limpa:
+                        st.markdown(resposta_limpa)
+                        st.session_state.cp_history.append({"role": "assistant", "content": resposta_limpa})
                         
-                        st.session_state.cp_history.append({
-                            "role": "assistant", 
-                            "content": resposta_bruta, 
-                            "audio": audio_path, 
-                            "autoplay": usou_audio
-                        })
-                        st.rerun()
+                    with st.spinner("✨ Gerando o documento oficial da BNCC..."):
+                        plano_json = bot.gerar_plano_do_chat(st.session_state.cp_history)
+                        if plano_json:
+                            st.session_state.cp_plano = plano_json
+                            msg_fim = "Prontinho! Seu plano está gerado ou atualizado. Revise os detalhes abaixo e baixe o arquivo."
+                            st.session_state.cp_history.append({"role": "assistant", "content": msg_fim})
+                            st.rerun()
+                        else:
+                            st.error("Houve um erro ao gerar. Tente conversar mais um pouco.")
+                else:
+                    st.markdown(resposta_bruta)
+                    audio_path = None
+                    
+                    st.session_state.cp_history.append({
+                        "role": "assistant", 
+                        "content": resposta_bruta, 
+                        "audio": audio_path, 
+                        "autoplay": usou_audio
+                    })
+                    st.rerun()
 
 
 
