@@ -840,7 +840,7 @@ def pagina_plano_aula():
             prompt = st.chat_input("Digite sua resposta...")
         with c_mic:
             st.markdown("<div style='margin-top:2px;'>", unsafe_allow_html=True)
-            audio_bytes = audio_recorder(text="", recording_color="#EA580C", neutral_color="#CBD5E1", icon_name="microphone", icon_size="2x")
+            audio_bytes = audio_recorder(text="", icon_name="microphone", icon_size="2x")
             st.markdown("</div>", unsafe_allow_html=True)
 
         if prompt:
