@@ -895,9 +895,10 @@ def pagina_plano_aula():
                     else:
                         st.markdown(resposta_bruta)
                         audio_path = None
-                        if usou_audio:
-                            audio_path = bot.gerar_audio_resposta(resposta_bruta)
-                            
+                        # Desativado temporariamente a pedido da usuária para economizar tokens
+                        # if usou_audio:
+                        #     audio_path = bot.gerar_audio_resposta(resposta_bruta)
+                        
                         st.session_state.cp_history.append({
                             "role": "assistant", 
                             "content": resposta_bruta, 
