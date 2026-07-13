@@ -838,33 +838,33 @@ def pagina_plano_aula():
     # Input Chat / Audio
     else:
         st.markdown("<br>", unsafe_allow_html=True)
-        c_text, c_mic = st.columns([0.85, 0.15])
+        # O microfone foi desativado temporariamente para poupar tokens
+        # c_text, c_mic = st.columns([0.85, 0.15])
         
         texto_usuario = None
         usou_audio = False
         
-        with c_text:
-            prompt = st.chat_input("Digite sua resposta...")
-        with c_mic:
-            st.markdown("<div style='margin-top:2px;'>", unsafe_allow_html=True)
-            from audio_recorder_streamlit import audio_recorder
-            # Estilo limpo e minimalista para agradar o usuário
-            audio_bytes = audio_recorder(text="", icon_name="microphone", icon_size="2x", recording_color="#e84118", neutral_color="#94A3B8")
-            st.markdown("</div>", unsafe_allow_html=True)
+        # with c_text:
+        prompt = st.chat_input("Digite sua resposta...")
+        
+        # with c_mic:
+        #     st.markdown("<div style='margin-top:2px;'>", unsafe_allow_html=True)
+        #     from audio_recorder_streamlit import audio_recorder
+        #     audio_bytes = audio_recorder(text="", icon_name="microphone", icon_size="2x", recording_color="#e84118", neutral_color="#94A3B8")
+        #     st.markdown("</div>", unsafe_allow_html=True)
 
         if prompt:
             texto_usuario = prompt
-        elif audio_bytes:
-            import hashlib
-            audio_md5 = hashlib.md5(audio_bytes).hexdigest()
-            # Anti-loop infinito: só processar se for um áudio novo (md5 diferente)
-            if st.session_state.get("last_audio_hash") != audio_md5:
-                st.session_state["last_audio_hash"] = audio_md5
-                with st.spinner("Ouvindo..."):
-                    from modules.chatbot import Aurora
-                    bot = Aurora()
-                    texto_usuario = bot.transcrever_audio(audio_bytes)
-                    usou_audio = True
+        # elif audio_bytes:
+        #     import hashlib
+        #     audio_md5 = hashlib.md5(audio_bytes).hexdigest()
+        #     if st.session_state.get("last_audio_hash") != audio_md5:
+        #         st.session_state["last_audio_hash"] = audio_md5
+        #         with st.spinner("Ouvindo..."):
+        #             from modules.chatbot import Aurora
+        #             bot = Aurora()
+        #             texto_usuario = bot.transcrever_audio(audio_bytes)
+        #             usou_audio = True
 
         if texto_usuario:
             st.session_state.cp_history.append({"role": "user", "content": texto_usuario})
