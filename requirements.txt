@@ -8,3 +8,4 @@ reportlab>=4.0.0
 docxtpl>=0.16.0
 python-dotenv>=1.0.0
 edge-tts>=6.1.11
+audio-recorder-streamlit>=0.0.10
