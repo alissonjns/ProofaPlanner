@@ -178,6 +178,15 @@ label, [data-testid="stWidgetLabel"] {
 }
 
 /* ── Chat input ── */
+[data-testid="stBottom"],
+[data-testid="stBottomBlockContainer"],
+[data-testid="stChatInputContainer"],
+.stChatFloatingInputContainer,
+[data-testid="stBottom"] > div {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
 [data-testid="stChatInput"],
 [data-testid="stChatInput"] > div {
     background-color: #FFFFFF !important;
