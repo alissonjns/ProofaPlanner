@@ -10,7 +10,7 @@ from pathlib import Path
 import streamlit as st
 
 from modules.bncc_engine import BNCCEngine
-from modules.chatbot import ProfaBot
+from modules.chatbot import Aurora
 from modules.exportador import Exportador
 
 # ─── Configuração da Página ───────────────────────────────────────────────────
@@ -464,7 +464,7 @@ with st.sidebar:
         "Modelo": ("modelo", "📋", "Meu Modelo"),
         "Plano":  ("plano",  "✏️", "Criar Plano"),
         "Alunos": ("alunos", "👶", "Alunos"),
-        "Bot":    ("profabot","💬", "ProfaBot"),
+        "Bot":    ("Aurora","💬", "Aurora"),
     }
     
     for key, (pag, icon, label) in _nav_options.items():
@@ -578,7 +578,7 @@ def pagina_boas_vindas():
                  "Tenho o arquivo que a escola me deu e quero carregá-lo"),
                 ("plano",    "✏️", "Criar meu primeiro plano de aula",
                  "Quero digitar o tema de uma aula e gerar o documento agora"),
-                ("profabot", "💬", "Fazer uma pergunta sobre a BNCC",
+                ("Aurora", "💬", "Fazer uma pergunta sobre a BNCC",
                  "Tenho uma dúvida e quero perguntar para a assistente virtual"),
             ]
             for pag, icon, titulo, desc in _opcoes:
@@ -621,20 +621,21 @@ def pagina_inicio():
         ("alunos",   "👶", "Relatório dos Alunos",
          "Registre como cada aluno está se desenvolvendo e gere o relatório bimestral",
          "#EFF6FF", "#BFDBFE", "#1D4ED8"),
-        ("profabot", "💬", "Tirar uma Dúvida",
+        ("Aurora", "💬", "Tirar uma Dúvida",
          "Pergunte qualquer coisa sobre a BNCC ou sobre como usar o sistema",
          "#F5F3FF", "#DDD6FE", "#5B21B6"),
     ]
     for col, (pag, icon, titulo, desc, bg, border, cor) in zip([c1, c2, c3], _atalhos):
         with col:
-            st.markdown(f"""<div style="background:{bg}; border:1.5px solid {border}; border-radius:14px; padding:1.5rem; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+            with st.container(border=True):
+                st.markdown(f"""
                 <div style="font-size:2rem; margin-bottom:0.5rem;">{icon}</div>
-                <div style="font-weight:700; color:{cor}; margin-bottom:0.3rem; font-size:1rem;">{titulo}</div>
-                <div style="color:#475569; font-size:0.82rem; line-height:1.5;">{desc}</div>
-            </div>""", unsafe_allow_html=True)
-            if st.button(titulo, key=f"at_{pag}", use_container_width=True, type="primary"):
-                st.session_state.pagina = pag
-                st.rerun()
+                <div style="font-weight:700; color:#0F172A; margin-bottom:0.3rem; font-size:1rem;">{titulo}</div>
+                <div style="color:#475569; font-size:0.85rem; line-height:1.4; height:60px;">{desc}</div>
+                """, unsafe_allow_html=True)
+                if st.button("Acessar →", key=f"at_{pag}", use_container_width=True):
+                    st.session_state.pagina = pag
+                    st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown('<div class="sec">💡 Dica do Dia</div>', unsafe_allow_html=True)
@@ -734,296 +735,69 @@ def pagina_modelo():
 # ──────────────────────────────────────────────────────────────────────────────
 
 def pagina_plano_aula():
-    # ── Inicializar estado do fluxo ──────────────────────────────────────────
-    if "plano_step" not in st.session_state:
-        st.session_state.plano_step = 1
-    if "objetivos_selecionados" not in st.session_state:
-        st.session_state.objetivos_selecionados = []
-    if "plano_gerado" not in st.session_state:
-        st.session_state.plano_gerado = None
-
-    step = st.session_state.plano_step
-
-    # ── Cabeçalho ─────────────────────────────────────────────────────────────
     st.markdown("""
     <div style='margin-bottom:1.5rem;'>
         <div class='pp-hero-title'>✨ Criar Sequência Didática</div>
-        <div class='pp-hero-sub'>Siga os 3 passos abaixo e a IA escreve o plano completo para você!</div>
+        <div class='pp-hero-sub'>Converse com a Aurora 🌟 e ela montará seu plano rapidinho!</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Barra de Progresso em 3 Etapas ────────────────────────────────────────
-    s1 = "pp-step-active" if step == 1 else ("pp-step-done" if step > 1 else "pp-step-pending")
-    s2 = "pp-step-active" if step == 2 else ("pp-step-done" if step > 2 else "pp-step-pending")
-    s3 = "pp-step-active" if step == 3 else ("pp-step-done" if step > 3 else "pp-step-pending")
-    n1 = "✓" if step > 1 else "1"
-    n2 = "✓" if step > 2 else "2"
-    n3 = "✓" if step > 3 else "3"
+    if "cp_step" not in st.session_state:
+        st.session_state.cp_step = 0
+        st.session_state.cp_history = [
+            {"role": "assistant", "content": "Olá! Sou a Aurora 🌟, sua assistente pedagógica.\n\nPara qual turminha vamos criar o plano hoje? *(ex: Berçário 1, Maternal 2, Pré 1)*"}
+        ]
+        st.session_state.cp_data = {}
+        st.session_state.cp_plano = None
 
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.markdown(f"""<div class="pp-step {s1}">
-            <span class="pp-step-num" style="background:rgba(255,255,255,0.25);">{n1}</span>
-            📝 Dados da Aula
-        </div>""", unsafe_allow_html=True)
-    with c2:
-        st.markdown(f"""<div class="pp-step {s2}">
-            <span class="pp-step-num" style="background:rgba(255,255,255,0.25);">{n2}</span>
-            🎯 Objetivos BNCC
-        </div>""", unsafe_allow_html=True)
-    with c3:
-        st.markdown(f"""<div class="pp-step {s3}">
-            <span class="pp-step-num" style="background:rgba(255,255,255,0.25);">{n3}</span>
-            🤖 Plano Gerado
-        </div>""", unsafe_allow_html=True)
+    # Render History
+    for msg in st.session_state.cp_history:
+        with st.chat_message(msg["role"], avatar="🌟" if msg["role"] == "assistant" else "👤"):
+            st.markdown(msg["content"])
 
-    st.markdown("<div class='pp-divider'></div>", unsafe_allow_html=True)
-
-    _faixas = {"EI01": "👶 Bebês (0 a 1a6m)", "EI02": "🧒 Crianças (1a7m a 3a11m)", "Ambas": "Mista"}
-    _campos = {
-        "Todos": "🔍 Todos os campos",
-        "EO": "🤝 O eu, o outro e o nós",
-        "CG": "🏃 Corpo, gestos e movimentos",
-        "TS": "🎨 Traços, sons, cores e formas",
-        "EF": "💬 Escuta, fala, pensamento e imaginação",
-        "ET": "🔢 Espaços, tempos, quantidades e transformações",
-    }
-
-    # ══════════════════════════════════════════════════════════════════════════
-    # ETAPA 1 — DADOS DA AULA
-    # ══════════════════════════════════════════════════════════════════════════
-    if step == 1:
-        st.markdown("### Dados da Sequência Didática", unsafe_allow_html=False)
-
-        titulo_sd = st.text_input(
-            "Título da Sequência *",
-            placeholder="Ex: Descobrindo meu corpo através das brincadeiras",
-            help="Dê um nome criativo à sua SD"
-        )
-
-        c_seg, c_faixa = st.columns(2)
-        with c_seg:
-            segmento = st.selectbox(
-                "Segmento / Turma",
-                ["Berçário 1", "Berçário 2", "Maternal 1", "Maternal 2", "Pré 1", "Pré 2"]
-            )
-        with c_faixa:
-            faixa_sel = st.selectbox("Faixa Etária", options=list(_faixas.keys()), format_func=lambda x: _faixas[x])
-
-        c_dur, c_camp = st.columns(2)
-        with c_dur:
-            duracao = st.selectbox("Duração da SD", ["Diário", "Semanal", "Quinzenal", "Mensal", "Bimestral"])
-        with c_camp:
-            campo_sel = st.selectbox("Campo Principal de Experiência", options=list(_campos.keys()), format_func=lambda x: _campos[x])
-
-        tema = st.text_input(
-            "Tema / Atividade Central *",
-            placeholder="Ex: Brincadeira com argila e água",
-            help="O tema principal que será trabalhado na sequência"
-        )
-
-        # Guarda na sessão para usar nas próximas etapas
-        st.session_state._sd_titulo = titulo_sd
-        st.session_state._sd_segmento = segmento
-        st.session_state._sd_faixa = faixa_sel
-        st.session_state._sd_duracao = duracao
-        st.session_state._sd_campo = campo_sel
-        st.session_state._sd_tema = tema
-
-        if tema.strip():
-            _, col_btn, _ = st.columns([1, 2, 1])
-            with col_btn:
-                if st.button("Próximo: Encontrar objetivos BNCC →", type="primary", use_container_width=True):
-                    st.session_state.plano_step = 2
-                    st.rerun()
-        else:
-            st.markdown("""
-            <div class='pp-card-coral' style='padding:1rem;'>
-                <span style='color:#EA580C; font-weight:600;'>💡 Dica:</span>
-                <span style='color:#9A3412;'> Preencha o "Tema" para avançar para os objetivos BNCC!</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-    # ══════════════════════════════════════════════════════════════════════════
-    # ETAPA 2 — OBJETIVOS BNCC
-    # ══════════════════════════════════════════════════════════════════════════
-    elif step == 2:
-        tema = st.session_state.get("_sd_tema", "")
-        faixa_sel = st.session_state.get("_sd_faixa", "EI01")
-        campo_sel = st.session_state.get("_sd_campo", "Todos")
-
-        st.markdown(f"""
-        <div class='pp-card-verde' style='padding:1rem 1.4rem;'>
-            <span style='color:#059669; font-weight:600;'>🎯 Tema selecionado:</span>
-            <span style='color:#065F46; font-size:1.05rem; font-weight:700;'> {tema}</span>
-        </div>
-        """, unsafe_allow_html=True)
-
-        faixa_filtro = None if faixa_sel == "Ambas" else faixa_sel
-        campo_filtro = None if campo_sel == "Todos" else campo_sel
-
-        with st.spinner("🔍 Buscando os objetivos BNCC mais relevantes..."):
-            resultados = engine.buscar(texto=tema, faixa=faixa_filtro, campo=campo_filtro)[:5]
-
-        if resultados:
-            st.markdown("""
-            <div class='pp-section-title'>
-                🎯 Objetivos BNCC encontrados — marque os que se aplicam à sua SD:
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("<div style='color:#64748B; font-size:0.85rem; margin-bottom:0.8rem;'>Todos já vêm marcados. Desmarque se não quiser incluir algum.</div>", unsafe_allow_html=True)
-
-            selecionados = []
-            for obj in resultados:
-                campo_nome = _campos.get(obj.get('campo', ''), obj.get('campo', ''))
-                col_chk, col_info = st.columns([0.05, 0.95])
-                with col_chk:
-                    checked = st.checkbox("", value=True, key=f"obj_{obj['codigo']}", label_visibility="collapsed")
-                with col_info:
-                    st.markdown(f"""
-                    <div class="pp-obj-card" style="{'border-color:#10B981; background:#ECFDF5;' if True else ''}">
-                        <div style='display:flex; align-items:center; gap:8px; margin-bottom:4px;'>
-                            <span style='background:#10B981; color:white; padding:2px 8px; border-radius:6px; font-size:0.78rem; font-weight:700;'>{obj['codigo']}</span>
-                            <span class='pp-tag pp-tag-verde'>{campo_nome}</span>
-                        </div>
-                        <div style='color:#1E293B; font-size:0.88rem; line-height:1.5;'>{obj['descricao']}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                if checked:
-                    selecionados.append(obj)
-
-            st.session_state.objetivos_selecionados = selecionados
-
-            st.markdown("<div class='pp-divider'></div>", unsafe_allow_html=True)
-
-            c_back, c_next = st.columns(2)
-            with c_back:
-                if st.button("← Voltar e editar dados", use_container_width=True):
-                    st.session_state.plano_step = 1
-                    st.rerun()
-            with c_next:
-                if selecionados:
-                    if st.button(f"🤖 Gerar Plano Completo com IA →", type="primary", use_container_width=True):
-                        with st.spinner("✨ A IA está escrevendo sua Sequência Didática completa... isso pode levar uns 15 segundos!"):
-                            from modules.chatbot import ProfaBot
-                            bot = ProfaBot()
-                            plano_gerado = bot.gerar_plano_completo(
-                                tema=tema,
-                                faixa=_faixas[faixa_sel],
-                                campo=_campos.get(campo_sel, campo_sel),
-                                objetivos=selecionados
-                            )
-                            if plano_gerado:
-                                st.session_state.plano_gerado = plano_gerado
-                                st.session_state.plano_step = 3
-                                st.rerun()
-                            else:
-                                st.error("Houve um erro ao gerar o plano. Tente novamente.")
-                else:
-                    st.warning("Selecione pelo menos 1 objetivo para continuar.")
-        else:
-            st.warning("Não encontrei objetivos para essas palavras. Volte e tente um tema diferente.")
-            if st.button("← Voltar"):
-                st.session_state.plano_step = 1
-                st.rerun()
-
-    # ══════════════════════════════════════════════════════════════════════════
-    # ETAPA 3 — PLANO GERADO (REVISÃO E DOWNLOAD)
-    # ══════════════════════════════════════════════════════════════════════════
-    elif step == 3:
-        pg = st.session_state.plano_gerado
-        tema = st.session_state.get("_sd_tema", "")
-        faixa_sel = st.session_state.get("_sd_faixa", "EI01")
-        campo_sel = st.session_state.get("_sd_campo", "Todos")
-        segmento = st.session_state.get("_sd_segmento", "")
-        duracao = st.session_state.get("_sd_duracao", "Diário")
-        titulo_sd = st.session_state.get("_sd_titulo", "Sequência Didática")
-
-        st.markdown("""
-        <div class='pp-card-verde' style='padding:1.2rem 1.5rem;'>
-            <div style='display:flex; align-items:center; gap:10px;'>
-                <span style='font-size:1.8rem;'>🎉</span>
-                <div>
-                    <div style='font-weight:700; color:#065F46; font-size:1.05rem;'>Plano criado com sucesso!</div>
-                    <div style='color:#059669; font-size:0.88rem;'>Revise abaixo e baixe quando estiver pronto.</div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Resumo rápido
-        col_j, col_o = st.columns(2)
-        with col_j:
-            st.markdown("<div class='pp-section-title'>📖 Justificativa</div>", unsafe_allow_html=True)
-            justificativa = st.text_area("Justificativa", value=pg.get("justificativa", ""), height=120, label_visibility="collapsed")
-        with col_o:
-            st.markdown("<div class='pp-section-title'>🎯 Objetivo Geral</div>", unsafe_allow_html=True)
-            obj_geral = st.text_area("Objetivo Geral", value=pg.get("obj_geral", ""), height=120, label_visibility="collapsed")
+    # Finished state: Show generated plan and downloads
+    if st.session_state.cp_step == 4 and st.session_state.cp_plano:
+        pg = st.session_state.cp_plano
+        tema = st.session_state.cp_data.get("tema", "")
+        turma = st.session_state.cp_data.get("turma", "")
+        duracao = st.session_state.cp_data.get("duracao", "")
+        objs = st.session_state.cp_data.get("objs", [])
 
         st.markdown("<div class='pp-divider'></div>", unsafe_allow_html=True)
-        st.markdown("<div class='pp-section-title'>🧩 Atividades Propostas</div>", unsafe_allow_html=True)
-        st.markdown("<div style='color:#64748B; font-size:0.85rem; margin-bottom:0.8rem;'>Clique em cada atividade para expandir e editar.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='pp-section-title'>🧩 Resumo do Plano Gerado</div>", unsafe_allow_html=True)
+        
+        c_j, c_o = st.columns(2)
+        with c_j:
+            st.markdown("**Justificativa:**")
+            st.info(pg.get("justificativa", ""))
+        with c_o:
+            st.markdown("**Objetivo Geral:**")
+            st.info(pg.get("obj_geral", ""))
 
-        atividades = []
-        for i, ativ in enumerate(pg.get("atividades", [])):
-            titulo_expander = f"Atividade {i+1}: {ativ.get('nome', '')}"
-            with st.expander(titulo_expander, expanded=False):
-                nome_a = st.text_input("Nome da Atividade", value=ativ.get("nome", ""), key=f"n_{i}")
-                desc_a = st.text_area("Passo a Passo Detalhado", value=ativ.get("descricao", ""), height=150, key=f"d_{i}")
-                atividades.append({"nome": nome_a, "descricao": desc_a})
-
-        st.markdown("<div class='pp-divider'></div>", unsafe_allow_html=True)
-        st.markdown("<div class='pp-section-title'>📊 Avaliação e Registro</div>", unsafe_allow_html=True)
-        avaliacao = st.text_area("Como o aprendizado será observado e registrado", value=pg.get("avaliacao", ""), height=100, label_visibility="collapsed")
-
-        # Feedback para IA
-        st.markdown("""
-        <div class='pp-card-azul' style='padding:1.2rem; margin-top:1rem;'>
-            <div style='font-weight:700; color:#1D4ED8; margin-bottom:0.4rem;'>🤖 Quer ajustar algo?</div>
-            <div style='color:#1E40AF; font-size:0.88rem;'>Diga à IA o que deve mudar e ela reescreve o plano para você!</div>
-        </div>
-        """, unsafe_allow_html=True)
-        feedback_ia = st.text_input("O que você quer mudar?", placeholder="Ex: As atividades estão muito complexas para bebês, inclua mais músicas e movimentos suaves.")
-
-        c_refazer, _ = st.columns([1, 2])
-        with c_refazer:
-            if feedback_ia and st.button("🔄 Refazer com IA", type="primary", use_container_width=True):
-                with st.spinner("Reescrevendo plano..."):
-                    from modules.chatbot import ProfaBot
-                    bot = ProfaBot()
-                    novo_plano = bot.gerar_plano_completo(
-                        tema=tema,
-                        faixa=_faixas[faixa_sel],
-                        campo=_campos.get(campo_sel, campo_sel),
-                        objetivos=st.session_state.objetivos_selecionados,
-                        feedbacks=feedback_ia
-                    )
-                    if novo_plano:
-                        st.session_state.plano_gerado = novo_plano
-                        st.rerun()
+        st.markdown("**Atividades (clique para expandir):**")
+        atividades = pg.get("atividades", [])
+        for i, ativ in enumerate(atividades):
+            with st.expander(f"Atividade {i+1}: {ativ.get('nome', '')}"):
+                st.write(ativ.get("descricao", ""))
 
         st.markdown("<div class='pp-divider'></div>", unsafe_allow_html=True)
-        st.markdown("""
-        <div style='font-size:1.05rem; font-weight:700; color:#0F172A; margin-bottom:0.8rem;'>
-            ⬇️ Tudo certo? Baixe seu documento!
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("<div style='font-size:1.05rem; font-weight:700; color:#0F172A; margin-bottom:0.8rem;'>⬇️ Tudo certo? Baixe seu documento!</div>", unsafe_allow_html=True)
 
         plano_final = {
-            "titulo": titulo_sd if titulo_sd else "Sequência Didática",
+            "titulo": f"Sequência Didática - {tema}",
             "tema": tema,
-            "segmento": segmento,
-            "faixa": _faixas[faixa_sel],
-            "campo": _campos.get(campo_sel, campo_sel),
+            "segmento": turma,
+            "faixa": turma,
+            "campo": "Múltiplos Campos",
             "duracao": duracao,
-            "justificativa": justificativa,
-            "obj_geral": obj_geral,
-            "avaliacao": avaliacao,
+            "justificativa": pg.get("justificativa", ""),
+            "obj_geral": pg.get("obj_geral", ""),
+            "avaliacao": pg.get("avaliacao", "Observação contínua"),
             "atividades": atividades,
-            "objetivos_bncc": st.session_state.objetivos_selecionados,
+            "objetivos_bncc": objs,
         }
 
-        c_word, c_pdf = st.columns(2)
+        c_word, c_pdf, c_reset = st.columns([2, 2, 1.5])
         from modules.exportador import Exportador
         exportador = Exportador()
 
@@ -1031,7 +805,7 @@ def pagina_plano_aula():
             doc_word = exportador.gerar_sd_word(plano_final)
             nome_word = f"SD_{tema[:15].replace(' ', '_').lower()}.docx"
             st.download_button(
-                "📄 Baixar em Word (.docx)",
+                "📄 Baixar em Word",
                 data=doc_word, file_name=nome_word,
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 use_container_width=True
@@ -1045,14 +819,76 @@ def pagina_plano_aula():
                 mime="application/pdf",
                 use_container_width=True
             )
+        with c_reset:
+            if st.button("🔄 Criar Outro", use_container_width=True):
+                del st.session_state.cp_step
+                st.rerun()
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🆕 Criar nova Sequência Didática", use_container_width=False):
-            for k in ["plano_step", "plano_gerado", "objetivos_selecionados", "_sd_tema", "_sd_titulo",
-                      "_sd_faixa", "_sd_campo", "_sd_segmento", "_sd_duracao", "plano_atual"]:
-                if k in st.session_state:
-                    del st.session_state[k]
+    # Trigger LLM Generation
+    elif st.session_state.cp_step == 3:
+        with st.chat_message("assistant", avatar="🌟"):
+            with st.spinner("✨ A Aurora está combinando a BNCC com o seu tema para escrever o plano. Isso leva cerca de 15 segundos..."):
+                tema = st.session_state.cp_data["tema"]
+                turma = st.session_state.cp_data["turma"]
+                duracao = st.session_state.cp_data["duracao"]
+                
+                faixa_str = "EI01" if any(x in turma.lower() for x in ["berçário", "bercario", "bebê", "bebe"]) else "EI02"
+                
+                from modules.bncc_engine import BNCCEngine
+                engine = BNCCEngine()
+                objs = engine.buscar(texto=tema, faixa=faixa_str)[:4]
+                if not objs:
+                    objs = engine.buscar(texto="brincadeira", faixa=faixa_str)[:2] # fallback se n achar nada
+                
+                from modules.chatbot import Aurora
+                bot = Aurora()
+                plano_gerado = bot.gerar_plano_completo(
+                    tema=tema,
+                    faixa=turma,
+                    campo="Múltiplos Campos (Integração)",
+                    objetivos=objs
+                )
+                
+                if plano_gerado:
+                    st.session_state.cp_plano = plano_gerado
+                    st.session_state.cp_step = 4
+                    st.session_state.cp_data["objs"] = objs
+                    st.session_state.cp_history.append({
+                        "role": "assistant", 
+                        "content": "Prontinho! Seu plano está gerado. Revise os detalhes abaixo e clique nos botões para baixar o documento completo."
+                    })
+                    st.rerun()
+                else:
+                    st.error("Ops, deu um erro ao falar com a IA. Tente novamente.")
+                    if st.button("Tentar Novamente"):
+                        st.rerun()
+
+    # Input Chat
+    elif prompt := st.chat_input("Digite sua resposta..."):
+        st.session_state.cp_history.append({"role": "user", "content": prompt})
+        
+        step = st.session_state.cp_step
+        if step == 0:
+            st.session_state.cp_data["turma"] = prompt
+            st.session_state.cp_step = 1
+            reply = f"Ótimo! Turminha do **{prompt}**. E qual será o tema ou a principal atividade dessa sequência? *(ex: Brincadeira com tintas, O ciclo da semente)*"
+            st.session_state.cp_history.append({"role": "assistant", "content": reply})
             st.rerun()
+            
+        elif step == 1:
+            st.session_state.cp_data["tema"] = prompt
+            st.session_state.cp_step = 2
+            reply = f"Perfeito! O tema será **{prompt}**. Qual a duração aproximada para esse planejamento? *(ex: Uma aula, 3 dias, 1 semana)*"
+            st.session_state.cp_history.append({"role": "assistant", "content": reply})
+            st.rerun()
+
+        elif step == 2:
+            st.session_state.cp_data["duracao"] = prompt
+            st.session_state.cp_step = 3
+            reply = "Entendido! Estou buscando os melhores objetivos da BNCC e redigindo o seu plano agora mesmo. Aguarde um instante..."
+            st.session_state.cp_history.append({"role": "assistant", "content": reply})
+            st.rerun()
+
 
 
 
@@ -1204,7 +1040,7 @@ def pagina_alunos():
 
 # ──────────────────────────────────────────────────────────────────────────────
 
-def pagina_profabot():
+def pagina_Aurora():
     st.markdown('''
     <div style="margin-bottom:1rem;">
         <div style="font-size:1.5rem; font-weight:800; color:#0F172A; margin-bottom:0.3rem;">💬 Tirar Dúvidas com a Assistente Virtual</div>
@@ -1227,7 +1063,7 @@ def pagina_profabot():
             if st.button(f"💬 {_s}", key=f"sug_{_i}", use_container_width=True):
                 st.session_state.historico_chat.append({"role": "user", "content": _s})
                 with st.spinner("Pensando..."):
-                    bot = ProfaBot(st.session_state.gemini_key)
+                    bot = Aurora(st.session_state.gemini_key)
                     resp = bot.responder(_s, st.session_state.historico_chat[:-1])
                 st.session_state.historico_chat.append({"role": "assistant", "content": resp})
                 st.rerun()
@@ -1258,7 +1094,7 @@ def pagina_profabot():
     if enviar and prompt:
         st.session_state.historico_chat.append({"role": "user", "content": prompt})
         with st.spinner("Pensando..."):
-            bot = ProfaBot(st.session_state.gemini_key)
+            bot = Aurora(st.session_state.gemini_key)
             resp = bot.responder(prompt, st.session_state.historico_chat[:-1])
         st.session_state.historico_chat.append({"role": "assistant", "content": resp})
         st.rerun()
@@ -1279,6 +1115,6 @@ _PAGINAS = {
     "modelo":      pagina_modelo,
     "plano":       pagina_plano_aula,
     "alunos":      pagina_alunos,
-    "profabot":    pagina_profabot,
+    "Aurora":    pagina_Aurora,
 }
 _PAGINAS[st.session_state.pagina]()
